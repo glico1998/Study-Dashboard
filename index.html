@@ -7,7 +7,7 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.2/babel.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body { background: #040c17; color: #e2e8f0; font-family: 'DM Serif Display', serif; }
@@ -34,7 +34,7 @@
     const SUPABASE_URL  = "https://nlzxdxjvqxbldwphlkcy.supabase.co";
     const SUPABASE_ANON = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5senhkeGp2cXhibGR3cGhsa2N5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzc0Nzc2NzAsImV4cCI6MjA5MzA1MzY3MH0.PC4iaapByjl85vbXE1THqnDyCodIeg6F-Cu3oXMYZFM";
 
-    const supabase = supabase_js.createClient(SUPABASE_URL, SUPABASE_ANON);
+    const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON);
 
     // Two rows in a single "mcat_data" table — one for planner, one for checklist
     const USER_ID = "giancarlo"; // change this to anything unique to you
