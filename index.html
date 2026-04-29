@@ -1,0 +1,969 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>MCAT Study Dashboard</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.2/babel.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { background: #040c17; color: #e2e8f0; font-family: 'DM Serif Display', serif; }
+    @import url('https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Mono:wght@400;500&display=swap');
+    ::-webkit-scrollbar { width: 4px; height: 4px; }
+    ::-webkit-scrollbar-track { background: #0a1020; }
+    ::-webkit-scrollbar-thumb { background: #1e3a5f; border-radius: 4px; }
+    input, textarea { outline: none; }
+    textarea { resize: vertical; }
+    button { transition: opacity 0.15s; cursor: pointer; }
+    button:hover { opacity: 0.8; }
+  </style>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+</head>
+<body>
+  <div id="root"></div>
+
+  <script type="text/babel">
+    const { useState, useEffect, useRef } = React;
+
+    // ─── SUPABASE CONFIG ────────────────────────────────────────────────────────
+    // Replace these two values with your own from supabase.com → Project Settings → API
+    const SUPABASE_URL  = "https://nlzxdxjvqxbldwphlkcy.supabase.co/rest/v1/";
+    const SUPABASE_ANON = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5senhkeGp2cXhibGR3cGhsa2N5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzc0Nzc2NzAsImV4cCI6MjA5MzA1MzY3MH0.PC4iaapByjl85vbXE1THqnDyCodIeg6F-Cu3oXMYZFM";
+
+    const supabase = supabase_js.createClient(SUPABASE_URL, SUPABASE_ANON);
+
+    // Two rows in a single "mcat_data" table — one for planner, one for checklist
+    const USER_ID = "giancarlo"; // change this to anything unique to you
+
+    async function dbLoad(key) {
+      const { data, error } = await supabase
+        .from("mcat_data")
+        .select("value")
+        .eq("user_id", USER_ID)
+        .eq("key", key)
+        .single();
+      if (error || !data) return null;
+      try { return JSON.parse(data.value); } catch { return null; }
+    }
+
+    async function dbSave(key, value) {
+      const { error } = await supabase
+        .from("mcat_data")
+        .upsert({ user_id: USER_ID, key, value: JSON.stringify(value) }, { onConflict: "user_id,key" });
+      if (error) console.error("Save error:", error);
+    }
+
+    // ─── CHECKLIST SOURCE DATA ──────────────────────────────────────────────────
+    const CHECKLIST_DATA = [
+      { subject:"Biology", color:"#4ade80", chapters:[
+        { title:"Ch 1: The Cell",           topics:["1.1 Cell Theory","1.2 Eukaryotic Cells","1.3 Prokaryotic Structure","1.4 Prokaryotic Growth","1.5 Viruses"] },
+        { title:"Ch 2: Reproduction",       topics:["2.1 Cell Cycle & Mitosis","2.2 Meiosis","2.3 Reproductive System"] },
+        { title:"Ch 3: Embryogenesis",      topics:["3.1 Early Stages","3.2 Mechanisms","3.3 Fetal Circulation","3.4 Gestation & Birth"] },
+        { title:"Ch 4: Nervous System",     topics:["4.1 Neural Cells","4.2 Neural Impulses","4.3 System Organization"] },
+        { title:"Ch 5: Endocrine",          topics:["5.1 Hormone Action","5.2 Organs & Hormones"] },
+        { title:"Ch 6: Respiratory",        topics:["6.1 Anatomy/Breathing","6.2 Functions"] },
+        { title:"Ch 7: Cardiovascular",     topics:["7.1 Anatomy","7.2 Blood","7.3 Physiology"] },
+        { title:"Ch 8: Immune System",      topics:["8.1 Structure","8.2 Innate","8.3 Adaptive","8.4 Lymphatic"] },
+        { title:"Ch 9: Digestive",          topics:["9.1 Anatomy","9.2 Ingestion/Digestion","9.3 Accessory Organs","9.4 Absorption"] },
+        { title:"Ch 10: Homeostasis",       topics:["10.1 Excretory System","10.2 Skin"] },
+        { title:"Ch 11: Musculoskeletal",   topics:["11.1 Muscular System","11.2 Skeletal System"] },
+        { title:"Ch 12: Genetics/Evolution",topics:["12.1 Concepts","12.2 Gene Pool","12.3 Analytical Approaches","12.4 Evolution"] },
+      ]},
+      { subject:"Chemistry", color:"#60a5fa", chapters:[
+        { title:"Ch 1: Atomic Structure",   topics:["1.1 Subatomic Particles","1.2 Mass vs Weight","1.3 Bohr/Planck","1.4 Quantum Model"] },
+        { title:"Ch 2: Periodic Table",     topics:["2.1 Periodic Table","2.2 Types of Elements","2.3 Periodic Properties","2.4 Group Chemistry"] },
+        { title:"Ch 3: Bonding",            topics:["3.1 Bonding","3.2 Ionic","3.3 Covalent","3.4 Intermolecular Forces"] },
+        { title:"Ch 4: Stoichiometry",      topics:["4.1 Moles","4.2 Compounds","4.3 Reaction Types","4.4 Balancing","4.5 Stoich Apps","4.6 Ions"] },
+        { title:"Ch 5: Kinetics",           topics:["5.1 Chemical Kinetics","5.2 Reaction Rates"] },
+        { title:"Ch 6: Equilibrium",        topics:["6.1 Equilibrium","6.2 Le Châtelier's","6.3 Control"] },
+        { title:"Ch 7: Thermochemistry",    topics:["7.1 Systems","7.2 State Functions","7.3 Heat","7.4 Enthalpy","7.5 Entropy","7.6 Gibbs Free Energy"] },
+        { title:"Ch 8: Gas Phase",          topics:["8.1 Gas Phase","8.2 Ideal Gases","8.3 KMT","8.4 Real Gases"] },
+        { title:"Ch 9: Solutions",          topics:["9.1 Nature of Solutions","9.2 Concentration","9.3 Solution Equilibria","9.4 Colligative Properties"] },
+        { title:"Ch 10: Acids & Bases",     topics:["10.1 Definitions","10.2 Properties","10.3 Polyvalence","10.4 Titration/Buffers"] },
+        { title:"Ch 11: Redox",             topics:["11.1 Redox Concepts","11.2 Net Ionic Equations"] },
+        { title:"Ch 12: Electrochemistry",  topics:["12.1 Cells","12.2 Potentials","12.3 EMF & Thermo"] },
+      ]},
+      { subject:"Biochemistry", color:"#f97316", chapters:[
+        { title:"Ch 1: Amino Acids",        topics:["1.1 Properties","1.2 Acid-Base","1.3 Peptide Bonds","1.4 Primary/Secondary","1.5 Tertiary/Quat","1.6 Denaturation"] },
+        { title:"Ch 2: Enzymes",            topics:["2.1 Catalysts","2.2 Mechanisms","2.3 Kinetics","2.4 Conditions","2.5 Regulation"] },
+        { title:"Ch 3: Protein Function",   topics:["3.1 Cell Functions","3.2 Biosignaling","3.3 Isolation","3.4 Analysis"] },
+        { title:"Ch 4: Carbohydrates",      topics:["4.1 Classification","4.2 Cyclic Sugars","4.3 Monosaccharides","4.4 Complex Carbs"] },
+        { title:"Ch 5: Lipids",             topics:["5.1 Structural","5.2 Signaling","5.3 Storage"] },
+        { title:"Ch 6: DNA",                topics:["6.1 Structure","6.2 Chromosomes","6.3 Replication","6.4 Repair","6.5 Biotech"] },
+        { title:"Ch 7: Genetic Code",       topics:["7.1 Code","7.2 Transcription","7.3 Translation","7.4 Prokaryote Control","7.5 Eukaryote Control"] },
+        { title:"Ch 8: Membranes",          topics:["8.1 Fluid Mosaic","8.2 Components","8.3 Transport","8.4 Specialized"] },
+        { title:"Ch 9: Metabolism I",       topics:["9.1 Glucose Transport","9.2 Glycolysis","9.3 Other Sugars","9.4 PDH","9.5 Glycogenesis","9.6 Gluconeogenesis","9.7 PPP"] },
+        { title:"Ch 10: Metabolism II",     topics:["10.1 Acetyl-CoA","10.2 Citric Acid Cycle","10.3 ETC","10.4 Oxidative Phos"] },
+        { title:"Ch 11: Lipid/AA Metabolism",topics:["11.1 Digestion","11.2 Mobilization","11.3 Transport","11.4 Cholesterol","11.5 Fatty Acids","11.6 Ketone Bodies","11.7 Protein Catabolism"] },
+        { title:"Ch 12: Bioenergetics",     topics:["12.1 Thermo","12.2 ATP","12.3 Redox","12.4 Metabolic States","12.5 Hormonal Reg","12.6 Tissue Specific","12.7 Integrative"] },
+      ]},
+      { subject:"Organic Chemistry", color:"#fb923c", chapters:[
+        { title:"Ch 1: Nomenclature",       topics:["1.1 IUPAC","1.2 Hydrocarbons/Alcohols","1.3 Aldehydes/Ketones","1.4 Acids/Derivatives","1.5 Functional Groups"] },
+        { title:"Ch 2: Isomers",            topics:["2.1 Structural","2.2 Stereoisomers","2.3 Configurations"] },
+        { title:"Ch 3: Bonding",            topics:["3.1 Atomic Orbitals","3.2 Molecular Orbitals","3.3 Hybridization"] },
+        { title:"Ch 4: Reactions",          topics:["4.1 Acids/Bases","4.2 Nuc/Elec/LG","4.3 Redox","4.4 Chemoselectivity","4.5 Problem-Solving"] },
+        { title:"Ch 5: Alcohols",           topics:["5.1 Description","5.2 Reactions","5.3 Phenols"] },
+        { title:"Ch 6: Aldehydes I",        topics:["6.1 Description","6.2 Addition","6.3 Redox"] },
+        { title:"Ch 7: Aldehydes II",       topics:["7.1 Principles","7.2 Enolates","7.3 Aldol Condensation"] },
+        { title:"Ch 8: Carboxylic Acids",   topics:["8.1 Description","8.2 Reactions"] },
+        { title:"Ch 9: Acid Derivatives",   topics:["9.1 Amides/Esters","9.2 Reactivity","9.3 Substitution"] },
+        { title:"Ch 10: N & P Compounds",   topics:["10.1 Peptides/Proteins","10.2 AA Synthesis","10.3 P Compounds"] },
+        { title:"Ch 11: Spectroscopy",      topics:["11.1 IR","11.2 UV","11.3 NMR"] },
+        { title:"Ch 12: Purification",      topics:["12.1 Solubility","12.2 Distillation","12.3 Chromatography"] },
+      ]},
+      { subject:"Physics & Math", color:"#c084fc", chapters:[
+        { title:"Ch 1: Kinematics",         topics:["1.1 Units","1.2 Vectors","1.3 Displacement","1.4 Forces","1.5 Newton's Laws","1.6 Acceleration","1.7 Equilibrium"] },
+        { title:"Ch 2: Work & Energy",      topics:["2.1 Energy","2.2 Work","2.3 Mechanical Advantage"] },
+        { title:"Ch 3: Thermodynamics",     topics:["3.1 Zeroth Law","3.2 Systems","3.3 First Law","3.4 Second Law/Entropy"] },
+        { title:"Ch 4: Fluids",             topics:["4.1 Characteristics","4.2 Hydrostatics","4.3 Dynamics","4.4 Physiology"] },
+        { title:"Ch 5: Electrostatics",     topics:["5.1 Charges","5.2 Coulomb's","5.3 PE","5.4 Potential","5.5 Special Cases","5.6 Magnetism"] },
+        { title:"Ch 6: Circuits",           topics:["6.1 Current","6.2 Resistance","6.3 Capacitance","6.4 Meters"] },
+        { title:"Ch 7: Waves & Sound",      topics:["7.1 Characteristics","7.2 Sound"] },
+        { title:"Ch 8: Light & Optics",     topics:["8.1 Spectrum","8.2 Geo Optics","8.3 Diffraction","8.4 Polarization"] },
+        { title:"Ch 9: Atomic/Nuclear",     topics:["9.1 Photoelectric","9.2 Light Absorption","9.3 Binding Energy","9.4 Nuclear Reactions"] },
+        { title:"Ch 10: Mathematics",       topics:["10.1 Sig Figs","10.2 Logarithms","10.3 Trig","10.4 Problem-Solving"] },
+        { title:"Ch 11: Research",          topics:["11.1 Sci Method","11.2 Basic Science","11.3 Human Subjects","11.4 Ethics","11.5 Real World"] },
+        { title:"Ch 12: Statistics",        topics:["12.1 Central Tendency","12.2 Distributions","12.3 Measures","12.4 Probability","12.5 Testing","12.6 Charts/Graphs","12.7 Applying"] },
+      ]},
+    ];
+
+    const PLANNER_SUBJECTS = [
+      { label:"Biochemistry (I)",  baseSubject:"Biochemistry",   color:"#f97316" },
+      { label:"Biochemistry (II)", baseSubject:"Biochemistry",   color:"#fb923c" },
+      { label:"Biology (I)",       baseSubject:"Biology",        color:"#4ade80" },
+      { label:"Biology (II)",      baseSubject:"Biology",        color:"#22c55e" },
+      { label:"Chemistry (I)",     baseSubject:"Chemistry",      color:"#60a5fa" },
+      { label:"Chemistry (II)",    baseSubject:"Chemistry",      color:"#3b82f6" },
+      { label:"Physics (I)",       baseSubject:"Physics & Math", color:"#c084fc" },
+      { label:"Physics (II)",      baseSubject:"Physics & Math", color:"#a855f7" },
+    ];
+
+    const DAYS = ["Monday","Tuesday","Wednesday","Thursday","Friday","Saturday","Sunday"];
+    const DAY_SHORT = ["Mon","Tue","Wed","Thu","Fri","Sat","Sun"];
+    const DAY_COLORS = {
+      Monday:"#3b82f6", Tuesday:"#8b5cf6", Wednesday:"#06b6d4",
+      Thursday:"#10b981", Friday:"#f59e0b", Saturday:"#f43f5e", Sunday:"#ec4899"
+    };
+
+    // ─── DATA FACTORIES ─────────────────────────────────────────────────────────
+    function defaultWeek() {
+      const days = {}; DAYS.forEach(d=>{ days[d]={sections:[]}; }); return { days };
+    }
+    function parseClKey(k) {
+      const [si,ci,ti] = k.split("-").map(Number);
+      const sd = CHECKLIST_DATA[si]; if (!sd) return null;
+      const ch = sd.chapters[ci];   if (!ch) return null;
+      return { si, ci, ti, subjectData:sd, chapter:ch, topicName: ch.topics[ti] || k };
+    }
+    function newLinkedSubsection(clKey) {
+      return { id:crypto.randomUUID(), clKey, checks:{ textbook:false, claude:false }, subheadings:[] };
+    }
+    function newSubheading() {
+      return { id:crypto.randomUUID(), title:"", checks:{ textbook:false, claude:false } };
+    }
+    function resolveTopicName(clKey, clData) {
+      const p = parseClKey(clKey); if (!p) return clKey;
+      const saved = clData[clKey];
+      return (saved && saved.customName) ? saved.customName : p.topicName;
+    }
+    function getChapterAnkiKey(si, ci) { return `anki-ch-${si}-${ci}`; }
+    function getChapterAnki(si, ci, clData) { return !!clData[getChapterAnkiKey(si,ci)]; }
+    function isChapterFullyReved(si, ci, clData) {
+      const ch = CHECKLIST_DATA[si]?.chapters[ci]; if (!ch) return false;
+      return ch.topics.every((_,ti) => { const s = clData[`${si}-${ci}-${ti}`]; return s && s.rev; });
+    }
+
+    const BASE_MONDAY = new Date(2025, 3, 28);
+    function getWeekIndex(d) { return Math.max(0, Math.floor((d-BASE_MONDAY)/(7*86400000))); }
+    function weekLabel(idx) {
+      const s=new Date(BASE_MONDAY); s.setDate(s.getDate()+idx*7);
+      const e=new Date(s); e.setDate(s.getDate()+6);
+      const f=d=>d.toLocaleDateString("en-US",{month:"short",day:"numeric"});
+      return `${f(s)} – ${f(e)}`;
+    }
+    function groupSubsByChapter(subsections) {
+      const map = new Map();
+      subsections.forEach((sub, idx) => {
+        const p = parseClKey(sub.clKey); if (!p) return;
+        const k = `${p.si}-${p.ci}`;
+        if (!map.has(k)) map.set(k, { si:p.si, ci:p.ci, chapterTitle:p.chapter.title, color:p.subjectData.color, subs:[] });
+        map.get(k).subs.push({ sub, originalIdx:idx });
+      });
+      return [...map.values()];
+    }
+
+    // ─── SMALL UI ATOMS ─────────────────────────────────────────────────────────
+    function MiniCheck({ checked, onChange, color, label }) {
+      return (
+        <button onClick={onChange} style={{ display:"flex", alignItems:"center", gap:3, background:"none", border:"none", padding:"1px 4px", borderRadius:4 }}>
+          <span style={{ width:11, height:11, borderRadius:2, flexShrink:0, border:`1.5px solid ${checked?color:"#334155"}`, background:checked?color:"transparent", display:"flex", alignItems:"center", justifyContent:"center", transition:"all 0.12s" }}>
+            {checked&&<svg width="7" height="7" viewBox="0 0 7 7" fill="none"><path d="M1 3.5L2.8 5.2L6 1.5" stroke="#0f172a" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round"/></svg>}
+          </span>
+          <span style={{ fontSize:9, fontFamily:"'DM Mono', monospace", color:checked?color:"#475569" }}>{label}</span>
+        </button>
+      );
+    }
+    const PLANNER_CHECKS = { textbook:{ label:"Textbook", color:"#4ade80" }, claude:{ label:"Claude", color:"#60a5fa" } };
+    function CheckBadge({ checked, onChange, type }) {
+      const { label, color } = PLANNER_CHECKS[type];
+      return (
+        <button onClick={onChange} style={{ display:"flex", alignItems:"center", gap:4, padding:"3px 8px", borderRadius:20, border:`1.5px solid ${checked?color:"#334155"}`, background:checked?`${color}22`:"transparent", fontSize:11, fontFamily:"'DM Mono', monospace", color:checked?color:"#64748b", transition:"all 0.15s", whiteSpace:"nowrap" }}>
+          <span style={{ width:13, height:13, borderRadius:"50%", border:`1.5px solid ${checked?color:"#475569"}`, background:checked?color:"transparent", display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0 }}>
+            {checked&&<svg width="8" height="8" viewBox="0 0 8 8" fill="none"><path d="M1.5 4L3.2 5.7L6.5 2.3" stroke="#0f172a" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"/></svg>}
+          </span>
+          {label}
+        </button>
+      );
+    }
+    const CHECK_META = { textbook:{label:"Textbook",color:"#4ade80"}, claude:{label:"Claude",color:"#60a5fa"}, anki:{label:"Anki",color:"#f97316"} };
+    function CheckBox({ checked, onChange, type }) {
+      const { label, color } = CHECK_META[type];
+      return (
+        <button onClick={onChange} style={{ display:"flex", alignItems:"center", gap:4, padding:"3px 8px", borderRadius:20, border:`1.5px solid ${checked?color:"#334155"}`, background:checked?`${color}22`:"transparent", fontSize:11, fontFamily:"'DM Mono', monospace", color:checked?color:"#64748b", transition:"all 0.15s", whiteSpace:"nowrap" }}>
+          <span style={{ width:13, height:13, borderRadius:"50%", border:`1.5px solid ${checked?color:"#475569"}`, background:checked?color:"transparent", display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0 }}>
+            {checked&&<svg width="8" height="8" viewBox="0 0 8 8" fill="none"><path d="M1.5 4L3.2 5.7L6.5 2.3" stroke="#0f172a" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"/></svg>}
+          </span>
+          {label}
+        </button>
+      );
+    }
+
+    // ─── SUBHEADING ROWS ─────────────────────────────────────────────────────────
+    function SubheadingEdit({ sh, onChange, onDelete, onEnter, autoFocus }) {
+      const ref = useRef(null);
+      useEffect(()=>{ if(autoFocus&&ref.current) ref.current.focus(); },[autoFocus]);
+      return (
+        <div style={{ display:"flex", alignItems:"center", gap:5, marginBottom:4 }}>
+          <span style={{ color:"#64748b", fontSize:12, fontFamily:"'DM Mono', monospace", flexShrink:0 }}>↳</span>
+          <input ref={ref} value={sh.title} onChange={e=>onChange({...sh,title:e.target.value})}
+            onKeyDown={e=>{ if(e.key==="Enter"){e.preventDefault();onEnter();} }}
+            placeholder="Subheading..."
+            style={{ flex:1, background:"transparent", border:"none", borderBottom:"1px dashed #1e293b", color:"#94a3b8", fontSize:12, fontFamily:"'DM Serif Display', serif", fontStyle:"italic", padding:"2px 0" }}
+          />
+          <MiniCheck checked={sh.checks?.textbook||false} onChange={()=>onChange({...sh,checks:{...sh.checks,textbook:!sh.checks?.textbook}})} color="#4ade80" label="TB"/>
+          <MiniCheck checked={sh.checks?.claude||false}   onChange={()=>onChange({...sh,checks:{...sh.checks,claude:!sh.checks?.claude}})}   color="#60a5fa" label="CL"/>
+          <button onClick={onDelete} style={{ background:"none", border:"none", color:"#334155", fontSize:14, lineHeight:1, padding:"0 2px", flexShrink:0 }}>×</button>
+        </div>
+      );
+    }
+    function SubheadingView({ sh, onChange }) {
+      return (
+        <div style={{ display:"flex", alignItems:"center", gap:5, marginBottom:4 }}>
+          <span style={{ color:"#64748b", fontSize:12, fontFamily:"'DM Mono', monospace" }}>↳</span>
+          <span style={{ flex:1, color:"#64748b", fontSize:12, fontFamily:"'DM Serif Display', serif", fontStyle:"italic" }}>{sh.title}</span>
+          <MiniCheck checked={sh.checks?.textbook||false} onChange={()=>onChange({...sh,checks:{...sh.checks,textbook:!sh.checks?.textbook}})} color="#4ade80" label="TB"/>
+          <MiniCheck checked={sh.checks?.claude||false}   onChange={()=>onChange({...sh,checks:{...sh.checks,claude:!sh.checks?.claude}})}   color="#60a5fa" label="CL"/>
+        </div>
+      );
+    }
+
+    // ─── SUBSECTION ROWS ─────────────────────────────────────────────────────────
+    function SubsectionEdit({ sub, onChange, onDelete, clData }) {
+      const [focusIdx, setFocusIdx] = useState(null);
+      const displayName = resolveTopicName(sub.clKey, clData);
+      const sectionDone = sub.checks.textbook && sub.checks.claude;
+      function toggleCheck(k){ onChange({...sub,checks:{...sub.checks,[k]:!sub.checks[k]}}); }
+      function addSubheadingAt(ai){ const a=[...sub.subheadings];a.splice(ai+1,0,newSubheading());onChange({...sub,subheadings:a});setFocusIdx(ai+1); }
+      function addSubheading(){ onChange({...sub,subheadings:[...sub.subheadings,newSubheading()]});setFocusIdx(sub.subheadings.length); }
+      useEffect(()=>{ if(focusIdx!==null) setFocusIdx(null); },[focusIdx]);
+      function updateSh(i,u){ const a=[...sub.subheadings];a[i]=u;onChange({...sub,subheadings:a}); }
+      function deleteSh(i){ onChange({...sub,subheadings:sub.subheadings.filter((_,j)=>j!==i)}); }
+      return (
+        <div style={{ background:"#0c1428", border:`1px solid ${sectionDone?"#1e3a2a":"#1e2d45"}`, borderRadius:8, padding:"10px 12px", marginBottom:6, transition:"border-color 0.2s" }}>
+          <div style={{ display:"flex", alignItems:"center", gap:6, marginBottom:8 }}>
+            <span style={{ color:"#3b82f6", fontSize:11, fontFamily:"'DM Mono', monospace", flexShrink:0 }}>§</span>
+            <span style={{ flex:1, color:sectionDone?"#475569":"#cbd5e1", fontSize:13, fontFamily:"'DM Serif Display', serif", textDecoration:sectionDone?"line-through":"none" }}>{displayName}</span>
+            {sectionDone&&<span style={{ fontSize:10, flexShrink:0 }}>✓</span>}
+            <button onClick={onDelete} style={{ background:"none", border:"none", color:"#334155", fontSize:16, lineHeight:1, flexShrink:0 }}>×</button>
+          </div>
+          <div style={{ display:"flex", gap:6, flexWrap:"wrap", marginBottom:sub.subheadings.length?8:0 }}>
+            <CheckBadge type="textbook" checked={sub.checks.textbook} onChange={()=>toggleCheck("textbook")}/>
+            <CheckBadge type="claude"   checked={sub.checks.claude}   onChange={()=>toggleCheck("claude")}/>
+          </div>
+          {sub.subheadings.length>0&&(
+            <div style={{ marginTop:6, paddingLeft:4 }}>
+              {sub.subheadings.map((sh,i)=><SubheadingEdit key={sh.id} sh={sh} onChange={u=>updateSh(i,u)} onDelete={()=>deleteSh(i)} onEnter={()=>addSubheadingAt(i)} autoFocus={focusIdx===i}/>)}
+            </div>
+          )}
+          <button onClick={addSubheading} style={{ marginTop:6, background:"none", border:"none", color:"#334155", fontSize:11, fontFamily:"'DM Mono', monospace", padding:0 }}>+ subheading</button>
+        </div>
+      );
+    }
+    function SubsectionView({ sub, onChange, clData }) {
+      const displayName = resolveTopicName(sub.clKey, clData);
+      const sectionDone = sub.checks.textbook && sub.checks.claude;
+      function toggleCheck(k){ onChange({...sub,checks:{...sub.checks,[k]:!sub.checks[k]}}); }
+      function updateSh(i,u){ const a=[...sub.subheadings];a[i]=u;onChange({...sub,subheadings:a}); }
+      return (
+        <div style={{ background:"#0c1428", border:`1px solid ${sectionDone?"#1e3a2a":"#1e2d45"}`, borderRadius:8, padding:"10px 12px", marginBottom:6, transition:"border-color 0.2s" }}>
+          <div style={{ display:"flex", alignItems:"center", gap:6, marginBottom:7 }}>
+            <span style={{ color:"#3b82f6", fontSize:11, fontFamily:"'DM Mono', monospace" }}>§</span>
+            <span style={{ color:sectionDone?"#475569":"#cbd5e1", fontSize:13, fontFamily:"'DM Serif Display', serif", textDecoration:sectionDone?"line-through":"none", flex:1 }}>{displayName}</span>
+            {sectionDone&&<span style={{ fontSize:11, color:"#4ade80" }}>✓</span>}
+          </div>
+          <div style={{ display:"flex", gap:6, flexWrap:"wrap", marginBottom:sub.subheadings.length?6:0 }}>
+            <CheckBadge type="textbook" checked={sub.checks.textbook} onChange={()=>toggleCheck("textbook")}/>
+            <CheckBadge type="claude"   checked={sub.checks.claude}   onChange={()=>toggleCheck("claude")}/>
+          </div>
+          {sub.subheadings.length>0&&(
+            <div style={{ marginTop:6, paddingLeft:4 }}>
+              {sub.subheadings.map((sh,i)=><SubheadingView key={sh.id} sh={sh} onChange={u=>updateSh(i,u)}/>)}
+            </div>
+          )}
+        </div>
+      );
+    }
+
+    // ─── SECTION CARD ────────────────────────────────────────────────────────────
+    function SectionCard({ sec, onChange, onDelete, onMoveRequest, clData, onClDataChange, onChapterComplete }) {
+      const [editing, setEditing] = useState(!sec.saved);
+      const { color } = sec;
+      const fullTitle = sec.topic ? `${sec.subject}: ${sec.topic}` : sec.subject;
+      const groups = groupSubsByChapter(sec.subsections);
+      const allSubsDone = sec.subsections.length>0 && sec.subsections.every(s=>s.checks.textbook&&s.checks.claude);
+
+      function updateSub(i, u) {
+        const newSubs=[...sec.subsections]; newSubs[i]=u;
+        onChange({...sec,subsections:newSubs});
+        if (u.checks.textbook && u.checks.claude) {
+          const existing = clData[u.clKey]||{};
+          if (!existing.rev) {
+            const newCl = {...clData,[u.clKey]:{...existing,rev:true}};
+            onClDataChange(newCl);
+            const p = parseClKey(u.clKey);
+            if (p && isChapterFullyReved(p.si,p.ci,newCl)) {
+              onChapterComplete({ chapterTitle:p.chapter.title, si:p.si, ci:p.ci });
+            }
+          }
+        }
+      }
+      function deleteSub(i){ onChange({...sec,subsections:sec.subsections.filter((_,j)=>j!==i)}); }
+      function handleSave(){ onChange({...sec,saved:true}); setEditing(false); }
+      function toggleMin(){ onChange({...sec,minimized:!sec.minimized}); }
+
+      const VideoCheckbox = ({inEdit}) => (
+        <button onClick={()=>onChange({...sec,videosWatched:!sec.videosWatched})} style={{ display:"flex", alignItems:"center", gap:5, background:"none", border:`1px solid ${sec.videosWatched?"#a78bfa":"#1e3a5f"}`, borderRadius:6, padding:inEdit?"3px 8px":"2px 7px", flexShrink:0 }}>
+          <span style={{ width:11, height:11, borderRadius:2, border:`1.5px solid ${sec.videosWatched?"#a78bfa":"#334155"}`, background:sec.videosWatched?"#a78bfa22":"transparent", display:"flex", alignItems:"center", justifyContent:"center" }}>
+            {sec.videosWatched&&<svg width="7" height="7" viewBox="0 0 7 7" fill="none"><path d="M1 3.5L2.8 5.2L6 1.5" stroke="#a78bfa" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round"/></svg>}
+          </span>
+          <span style={{ fontSize:9, fontFamily:"'DM Mono', monospace", color:sec.videosWatched?"#a78bfa":"#334155" }}>Videos</span>
+        </button>
+      );
+
+      if (!editing) return (
+        <div style={{ background:"#0a1020", border:`1px solid ${allSubsDone?"#1e3a2a":color+"44"}`, borderLeft:`3px solid ${color}`, borderRadius:10, marginBottom:10, overflow:"hidden", transition:"border-color 0.3s" }}>
+          <div style={{ display:"flex", alignItems:"center", gap:8, padding:"10px 14px", background:`${color}0d` }}>
+            <button onClick={toggleMin} style={{ background:"none", border:"none", color:"#475569", fontSize:14, lineHeight:1, padding:"0 2px", flexShrink:0 }}>{sec.minimized?"▸":"▾"}</button>
+            <VideoCheckbox/>
+            <span style={{ flex:1, fontFamily:"'DM Serif Display', serif", fontSize:15, fontWeight:700, color:allSubsDone?"#4ade80":"#f1f5f9" }}>
+              {fullTitle||<em style={{color:"#334155",fontWeight:400}}>Untitled</em>}
+              {allSubsDone&&<span style={{ fontSize:11, marginLeft:8, color:"#4ade80" }}>✓ Complete</span>}
+            </span>
+            <div style={{ display:"flex", gap:6, alignItems:"center", flexShrink:0 }}>
+              <button onClick={onMoveRequest} style={{ background:"none", border:"1px solid #1e3a5f", borderRadius:6, color:"#475569", fontSize:10, fontFamily:"'DM Mono', monospace", padding:"2px 7px" }}>move →</button>
+              <button onClick={()=>setEditing(true)} style={{ background:"none", border:`1px solid ${color}55`, borderRadius:6, color, fontSize:10, fontFamily:"'DM Mono', monospace", padding:"2px 7px" }}>edit</button>
+              <button onClick={onDelete} style={{ background:"none", border:"none", color:"#334155", fontSize:18, lineHeight:1 }}>×</button>
+            </div>
+          </div>
+          {!sec.minimized&&(
+            <div style={{ padding:"10px 14px 12px" }}>
+              {groups.length===0 ? <div style={{ color:"#334155", fontSize:12, fontFamily:"'DM Mono', monospace", fontStyle:"italic" }}>No sections.</div>
+                : groups.map(g=>(
+                  <div key={`${g.si}-${g.ci}`} style={{ marginBottom:10 }}>
+                    <div style={{ display:"flex", alignItems:"center", gap:6, marginBottom:6, paddingBottom:4, borderBottom:`1px solid ${g.color}22` }}>
+                      <span style={{ width:6, height:6, borderRadius:"50%", background:g.color, flexShrink:0 }}/>
+                      <span style={{ fontFamily:"'DM Mono', monospace", fontSize:10, color:g.color, letterSpacing:"0.06em", fontWeight:500 }}>{g.chapterTitle}</span>
+                    </div>
+                    {g.subs.map(({sub,originalIdx})=><SubsectionView key={sub.id} sub={sub} onChange={u=>updateSub(originalIdx,u)} clData={clData}/>)}
+                  </div>
+                ))
+              }
+              {(sec.notes||"").length>0&&(
+                <div style={{ marginTop:8, padding:"8px 10px", background:"#070f1c", borderRadius:6, border:"1px solid #0f2040" }}>
+                  <div style={{ fontFamily:"'DM Mono', monospace", fontSize:9, color:"#334155", marginBottom:4, letterSpacing:"0.1em" }}>NOTES</div>
+                  <div style={{ fontFamily:"'DM Serif Display', serif", fontSize:12, color:"#64748b", lineHeight:1.6, whiteSpace:"pre-wrap" }}>{sec.notes}</div>
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+      );
+
+      return (
+        <div style={{ background:"#0a1020", border:`1px solid ${color}66`, borderLeft:`3px solid ${color}`, borderRadius:10, padding:"12px 14px", marginBottom:10 }}>
+          <div style={{ display:"flex", alignItems:"center", gap:8, marginBottom:12 }}>
+            <VideoCheckbox inEdit/>
+            <span style={{ fontFamily:"'DM Mono', monospace", fontSize:11, color, background:`${color}22`, border:`1px solid ${color}44`, borderRadius:6, padding:"2px 8px", flexShrink:0 }}>{sec.subject}</span>
+            {sec.topic&&<span style={{ fontFamily:"'DM Serif Display', serif", fontSize:14, fontWeight:700, color:"#e2e8f0" }}>{sec.topic}</span>}
+            <div style={{ flex:1 }}/>
+            <button onClick={onDelete} style={{ background:"none", border:"none", color:"#475569", fontSize:18, lineHeight:1, flexShrink:0 }}>×</button>
+          </div>
+          {groups.length===0 ? <div style={{ color:"#334155", fontSize:12, fontFamily:"'DM Mono', monospace", fontStyle:"italic", marginBottom:8 }}>No sections linked.</div>
+            : groups.map(g=>(
+              <div key={`${g.si}-${g.ci}`} style={{ marginBottom:10 }}>
+                <div style={{ display:"flex", alignItems:"center", gap:6, marginBottom:6, paddingBottom:4, borderBottom:`1px solid ${g.color}22` }}>
+                  <span style={{ width:6, height:6, borderRadius:"50%", background:g.color, flexShrink:0 }}/>
+                  <span style={{ fontFamily:"'DM Mono', monospace", fontSize:10, color:g.color, letterSpacing:"0.06em", fontWeight:500 }}>{g.chapterTitle}</span>
+                </div>
+                {g.subs.map(({sub,originalIdx})=><SubsectionEdit key={sub.id} sub={sub} onChange={u=>updateSub(originalIdx,u)} onDelete={()=>deleteSub(originalIdx)} clData={clData}/>)}
+              </div>
+            ))
+          }
+          <div style={{ marginTop:8, marginBottom:10 }}>
+            <div style={{ fontFamily:"'DM Mono', monospace", fontSize:9, color:"#334155", marginBottom:4, letterSpacing:"0.1em" }}>NOTES</div>
+            <textarea value={sec.notes||""} onChange={e=>onChange({...sec,notes:e.target.value})} placeholder="Free-write notes for this topic block..." rows={3}
+              style={{ width:"100%", background:"#070f1c", border:"1px solid #0f2040", borderRadius:6, color:"#64748b", fontSize:12, fontFamily:"'DM Serif Display', serif", lineHeight:1.6, padding:"8px 10px" }}
+            />
+          </div>
+          <div style={{ display:"flex", justifyContent:"flex-end" }}>
+            <button onClick={handleSave} style={{ background:`${color}22`, border:`1px solid ${color}`, borderRadius:6, color, fontSize:12, fontFamily:"'DM Mono', monospace", padding:"5px 16px", fontWeight:500 }}>save ✓</button>
+          </div>
+        </div>
+      );
+    }
+
+    // ─── MOVE MODAL ──────────────────────────────────────────────────────────────
+    function MoveModal({ currentDay, onMove, onClose }) {
+      return (
+        <div style={{ position:"fixed", inset:0, background:"#000b", zIndex:200, display:"flex", alignItems:"center", justifyContent:"center" }} onClick={onClose}>
+          <div style={{ background:"#0d1a2d", border:"1px solid #1e3a5f", borderRadius:14, padding:"20px 24px", minWidth:220 }} onClick={e=>e.stopPropagation()}>
+            <div style={{ fontFamily:"'DM Mono', monospace", fontSize:10, letterSpacing:"0.15em", color:"#3b82f6", marginBottom:14 }}>MOVE TO DAY</div>
+            {DAYS.filter(d=>d!==currentDay).map(d=>(
+              <button key={d} onClick={()=>onMove(d)} style={{ display:"block", width:"100%", textAlign:"left", background:"none", border:"none", borderBottom:"1px solid #1e293b", color:"#94a3b8", fontSize:13, fontFamily:"'DM Serif Display', serif", padding:"8px 4px" }}>{d}</button>
+            ))}
+            <button onClick={onClose} style={{ marginTop:12, background:"none", border:"none", color:"#475569", fontSize:11, fontFamily:"'DM Mono', monospace", padding:0 }}>cancel</button>
+          </div>
+        </div>
+      );
+    }
+
+    // ─── SECTION BUILDER MODAL ───────────────────────────────────────────────────
+    function SectionBuilderModal({ onConfirm, onClose, existingKeys }) {
+      const [step, setStep] = useState(1);
+      const [pickedSubject, setPickedSubject] = useState(null);
+      const [topicName, setTopicName] = useState("");
+      const [clSubjIdx, setClSubjIdx] = useState(null);
+      const [clChapIdx, setClChapIdx] = useState(null);
+      const [selectedKeys, setSelectedKeys] = useState(new Set());
+      const topicRef = useRef(null);
+      useEffect(()=>{ if(step===2&&topicRef.current) topicRef.current.focus(); },[step]);
+      function toggleKey(k){ setSelectedKeys(p=>{ const s=new Set(p); s.has(k)?s.delete(k):s.add(k); return s; }); }
+      function handleConfirm() {
+        if(!pickedSubject||selectedKeys.size===0) return;
+        onConfirm({ id:crypto.randomUUID(), subject:pickedSubject.label, baseSubject:pickedSubject.baseSubject, color:pickedSubject.color, topic:topicName.trim(), videosWatched:false, notes:"", subsections:[...selectedKeys].map(k=>newLinkedSubsection(k)), saved:false, minimized:false });
+      }
+      const btn = { borderRadius:8, fontFamily:"'DM Mono', monospace", fontSize:12, padding:"6px 16px", transition:"all 0.15s" };
+      return (
+        <div style={{ position:"fixed", inset:0, background:"#000c", zIndex:300, display:"flex", alignItems:"center", justifyContent:"center", padding:16 }} onClick={onClose}>
+          <div style={{ background:"#0d1a2d", border:"1px solid #1e3a5f", borderRadius:16, padding:"24px", width:"100%", maxWidth:520, maxHeight:"88vh", overflowY:"auto" }} onClick={e=>e.stopPropagation()}>
+            <div style={{ display:"flex", gap:6, marginBottom:20, alignItems:"center" }}>
+              {[1,2,3].map(n=><div key={n} style={{ width:8, height:8, borderRadius:"50%", background:step>=n?"#3b82f6":"#1e3a5f" }}/>)}
+              <span style={{ fontFamily:"'DM Mono', monospace", fontSize:10, color:"#475569", marginLeft:4 }}>STEP {step} OF 3</span>
+            </div>
+            {step===1&&(<>
+              <div style={{ fontFamily:"'DM Mono', monospace", fontSize:10, letterSpacing:"0.15em", color:"#3b82f6", marginBottom:12 }}>CHOOSE SUBJECT</div>
+              <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:8 }}>
+                {PLANNER_SUBJECTS.map(s=>(
+                  <button key={s.label} onClick={()=>setPickedSubject(s)} style={{ ...btn, padding:"10px 12px", textAlign:"left", background:pickedSubject?.label===s.label?`${s.color}22`:"#070f1c", border:`1px solid ${pickedSubject?.label===s.label?s.color:"#1e293b"}`, color:pickedSubject?.label===s.label?s.color:"#64748b", display:"flex", alignItems:"center", gap:8 }}>
+                    <span style={{ width:8, height:8, borderRadius:"50%", background:s.color, flexShrink:0 }}/><span>{s.label}</span>
+                  </button>
+                ))}
+              </div>
+              <div style={{ display:"flex", justifyContent:"flex-end", marginTop:20, gap:8 }}>
+                <button onClick={onClose} style={{ ...btn, background:"none", border:"1px solid #1e293b", color:"#475569" }}>Cancel</button>
+                <button onClick={()=>setStep(2)} disabled={!pickedSubject} style={{ ...btn, background:pickedSubject?`${pickedSubject.color}22`:"#0d1a2d", border:`1px solid ${pickedSubject?.color||"#1e293b"}`, color:pickedSubject?.color||"#475569", opacity:pickedSubject?1:0.4 }}>Next →</button>
+              </div>
+            </>)}
+            {step===2&&(<>
+              <div style={{ fontFamily:"'DM Mono', monospace", fontSize:10, letterSpacing:"0.15em", color:"#3b82f6", marginBottom:12 }}>TOPIC NAME</div>
+              <div style={{ display:"flex", alignItems:"center", gap:8, marginBottom:8 }}>
+                <span style={{ fontFamily:"'DM Serif Display', serif", fontWeight:700, color:pickedSubject.color, fontSize:15 }}>{pickedSubject.label}</span><span style={{ color:"#475569" }}>:</span>
+              </div>
+              <input ref={topicRef} value={topicName} onChange={e=>setTopicName(e.target.value)} onKeyDown={e=>{ if(e.key==="Enter"&&topicName.trim()) setStep(3); }} placeholder="e.g. Quantum Numbers, Cell Signaling..."
+                style={{ width:"100%", background:"#070f1c", border:`1px solid ${pickedSubject.color}55`, borderRadius:8, color:"#e2e8f0", fontSize:15, fontFamily:"'DM Serif Display', serif", fontWeight:700, padding:"10px 14px" }}
+              />
+              <div style={{ display:"flex", justifyContent:"space-between", marginTop:20, gap:8 }}>
+                <button onClick={()=>setStep(1)} style={{ ...btn, background:"none", border:"1px solid #1e293b", color:"#475569" }}>← Back</button>
+                <button onClick={()=>setStep(3)} disabled={!topicName.trim()} style={{ ...btn, background:topicName.trim()?`${pickedSubject.color}22`:"#0d1a2d", border:`1px solid ${topicName.trim()?pickedSubject.color:"#1e293b"}`, color:topicName.trim()?pickedSubject.color:"#475569", opacity:topicName.trim()?1:0.4 }}>Next →</button>
+              </div>
+            </>)}
+            {step===3&&(<>
+              <div style={{ fontFamily:"'DM Mono', monospace", fontSize:10, letterSpacing:"0.15em", color:"#3b82f6", marginBottom:12 }}>ADD SECTIONS FROM CHECKLIST</div>
+              <div style={{ display:"flex", gap:6, flexWrap:"wrap", marginBottom:12 }}>
+                {CHECKLIST_DATA.map((s,si)=>(
+                  <button key={si} onClick={()=>{ setClSubjIdx(si); setClChapIdx(null); }} style={{ ...btn, padding:"4px 10px", background:clSubjIdx===si?`${s.color}22`:"#070f1c", border:`1px solid ${clSubjIdx===si?s.color:"#1e293b"}`, color:clSubjIdx===si?s.color:"#475569", fontSize:11 }}>{s.subject}</button>
+                ))}
+              </div>
+              {clSubjIdx!==null&&(
+                <div style={{ marginBottom:12 }}>
+                  <div style={{ fontFamily:"'DM Mono', monospace", fontSize:9, letterSpacing:"0.1em", color:"#334155", marginBottom:6 }}>CHAPTER</div>
+                  <div style={{ display:"flex", flexDirection:"column", gap:4 }}>
+                    {CHECKLIST_DATA[clSubjIdx].chapters.map((ch,ci)=>(
+                      <button key={ci} onClick={()=>setClChapIdx(ci)} style={{ ...btn, padding:"6px 10px", textAlign:"left", background:clChapIdx===ci?`${CHECKLIST_DATA[clSubjIdx].color}18`:"#070f1c", border:`1px solid ${clChapIdx===ci?CHECKLIST_DATA[clSubjIdx].color+"55":"#1e293b"}`, color:clChapIdx===ci?"#e2e8f0":"#64748b", fontSize:12, fontFamily:"'DM Serif Display', serif" }}>{ch.title}</button>
+                    ))}
+                  </div>
+                </div>
+              )}
+              {clSubjIdx!==null&&clChapIdx!==null&&(
+                <div style={{ marginBottom:16 }}>
+                  <div style={{ fontFamily:"'DM Mono', monospace", fontSize:9, letterSpacing:"0.1em", color:"#334155", marginBottom:6 }}>SUBTOPICS — click to select</div>
+                  <div style={{ display:"flex", flexDirection:"column", gap:3 }}>
+                    {CHECKLIST_DATA[clSubjIdx].chapters[clChapIdx].topics.map((t,ti)=>{
+                      const k=`${clSubjIdx}-${clChapIdx}-${ti}`; const sel=selectedKeys.has(k); const already=existingKeys.has(k); const c=CHECKLIST_DATA[clSubjIdx].color;
+                      return (
+                        <button key={ti} onClick={()=>!already&&toggleKey(k)} style={{ ...btn, padding:"6px 12px", textAlign:"left", background:sel?`${c}22`:already?"#0a1020":"#070f1c", border:`1px solid ${sel?c:already?"#1e293b55":"#1e293b"}`, color:sel?c:already?"#334155":"#64748b", fontSize:12, fontFamily:"'DM Serif Display', serif", display:"flex", alignItems:"center", gap:8, cursor:already?"default":"pointer" }}>
+                          <span style={{ width:12, height:12, borderRadius:3, flexShrink:0, border:`1.5px solid ${sel?c:already?"#1e3a5f":"#334155"}`, background:sel?c:"transparent", display:"flex", alignItems:"center", justifyContent:"center" }}>
+                            {sel&&<svg width="7" height="7" viewBox="0 0 7 7" fill="none"><path d="M1 3.5L2.8 5.2L6 1.5" stroke="#0f172a" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round"/></svg>}
+                          </span>
+                          <span style={{ textDecoration:already?"line-through":"none", textDecorationColor:"#334155", opacity:already?0.45:1 }}>{t}</span>
+                          {already&&<span style={{ fontFamily:"'DM Mono', monospace", fontSize:9, color:"#1e3a5f", marginLeft:"auto" }}>in use</span>}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+              {selectedKeys.size>0&&<div style={{ fontFamily:"'DM Mono', monospace", fontSize:10, color:"#3b82f6", marginBottom:12 }}>{selectedKeys.size} subtopic{selectedKeys.size!==1?"s":""} selected</div>}
+              <div style={{ display:"flex", justifyContent:"space-between", gap:8 }}>
+                <button onClick={()=>setStep(2)} style={{ ...btn, background:"none", border:"1px solid #1e293b", color:"#475569" }}>← Back</button>
+                <button onClick={handleConfirm} disabled={selectedKeys.size===0} style={{ ...btn, background:selectedKeys.size>0?"#3b82f622":"#0d1a2d", border:`1px solid ${selectedKeys.size>0?"#3b82f6":"#1e293b"}`, color:selectedKeys.size>0?"#60a5fa":"#475569", opacity:selectedKeys.size>0?1:0.4 }}>Add Topic Block ✓</button>
+              </div>
+            </>)}
+          </div>
+        </div>
+      );
+    }
+
+    // ─── DAY PANEL ───────────────────────────────────────────────────────────────
+    function DayPanel({ day, data, onChange, onMoveSection, clData, onClDataChange, onChapterComplete, allUsedClKeys }) {
+      const [open, setOpen] = useState(false);
+      const [moveIdx, setMoveIdx] = useState(null);
+      const [showBuilder, setShowBuilder] = useState(false);
+      const color = DAY_COLORS[day];
+      const count = data.sections.length;
+      const doneTopic = data.sections.filter(s=>s.subsections.length>0&&s.subsections.every(sub=>sub.checks.textbook&&sub.checks.claude)).length;
+
+      function addSectionFromBuilder(sec){ onChange({...data,sections:[...data.sections,sec]}); setShowBuilder(false); if(!open) setOpen(true); }
+      function updateSection(i,u){ const a=[...data.sections];a[i]=u;onChange({...data,sections:a}); }
+      function deleteSection(i){
+        const sec = data.sections[i];
+        const clearedSubs = sec.subsections.filter(sub=>sub.checks.textbook&&sub.checks.claude);
+        if (clearedSubs.length>0) {
+          let newCl={...clData};
+          clearedSubs.forEach(sub=>{ if(newCl[sub.clKey]) newCl[sub.clKey]={...newCl[sub.clKey],rev:false}; });
+          onClDataChange(newCl);
+        }
+        onChange({...data,sections:data.sections.filter((_,j)=>j!==i)});
+      }
+      function handleMoveConfirm(targetDay){ const sec=data.sections[moveIdx]; onMoveSection(day,targetDay,sec); setMoveIdx(null); }
+
+      return (
+        <div style={{ marginBottom:8, borderRadius:12, border:`1px solid ${open?color+"44":"#1e293b"}`, overflow:"hidden", transition:"border-color 0.2s" }}>
+          {moveIdx!==null&&<MoveModal currentDay={day} onMove={handleMoveConfirm} onClose={()=>setMoveIdx(null)}/>}
+          {showBuilder&&<SectionBuilderModal onConfirm={addSectionFromBuilder} onClose={()=>setShowBuilder(false)} existingKeys={allUsedClKeys}/>}
+          <button onClick={()=>setOpen(!open)} style={{ width:"100%", display:"flex", alignItems:"center", justifyContent:"space-between", padding:"10px 16px", background:open?`${color}11`:"#0d1a2d", border:"none", transition:"background 0.2s" }}>
+            <div style={{ display:"flex", alignItems:"center", gap:10 }}>
+              <span style={{ width:8, height:8, borderRadius:"50%", background:color, flexShrink:0 }}/>
+              <span style={{ fontFamily:"'DM Mono', monospace", fontSize:13, color:open?color:"#94a3b8", letterSpacing:"0.06em", fontWeight:500 }}>{day.toUpperCase()}</span>
+              {count>0&&<span style={{ fontSize:10, fontFamily:"'DM Mono', monospace", color:"#475569", background:"#1e293b", borderRadius:10, padding:"1px 7px" }}>{count} topic{count!==1?"s":""}</span>}
+            </div>
+            <div style={{ display:"flex", alignItems:"center", gap:8 }}>
+              {count>0&&<span style={{ fontSize:11, fontFamily:"'DM Mono', monospace", color:doneTopic===count&&count>0?"#4ade80":"#475569" }}>{doneTopic}/{count} done</span>}
+              <svg width="12" height="12" viewBox="0 0 12 12" fill="none" style={{ transform:open?"rotate(180deg)":"rotate(0deg)", transition:"transform 0.2s" }}>
+                <path d="M2 4L6 8L10 4" stroke="#475569" strokeWidth="1.5" strokeLinecap="round"/>
+              </svg>
+            </div>
+          </button>
+          {open&&(
+            <div style={{ padding:"12px 14px", background:"#07101e" }}>
+              {data.sections.map((sec,i)=>(
+                <SectionCard key={sec.id} sec={sec} onChange={u=>updateSection(i,u)} onDelete={()=>deleteSection(i)} onMoveRequest={()=>setMoveIdx(i)} clData={clData} onClDataChange={onClDataChange} onChapterComplete={onChapterComplete}/>
+              ))}
+              <button onClick={()=>setShowBuilder(true)} style={{ background:"none", border:`1px dashed ${color}55`, borderRadius:8, color, fontSize:12, fontFamily:"'DM Mono', monospace", padding:"7px 12px", width:"100%" }}>+ add topic block</button>
+            </div>
+          )}
+        </div>
+      );
+    }
+
+    // ─── WEEK OVERVIEW ───────────────────────────────────────────────────────────
+    function WeekOverview({ weekData, clData }) {
+      return (
+        <div style={{ overflowX:"auto", paddingBottom:8 }}>
+          <div style={{ display:"grid", gridTemplateColumns:"repeat(7, minmax(120px, 1fr))", gap:10, minWidth:860 }}>
+            {DAYS.map((day,di)=>{
+              const color=DAY_COLORS[day]; const dayData=weekData.days[day]??{sections:[]};
+              return (
+                <div key={day} style={{ background:"#070f1c", border:`1px solid ${color}33`, borderTop:`2px solid ${color}`, borderRadius:10, overflow:"hidden" }}>
+                  <div style={{ padding:"8px 10px 7px", background:`${color}0d`, borderBottom:`1px solid ${color}22` }}>
+                    <div style={{ fontFamily:"'DM Mono', monospace", fontSize:11, fontWeight:500, color, letterSpacing:"0.08em" }}>{DAY_SHORT[di].toUpperCase()}</div>
+                    <div style={{ fontFamily:"'DM Mono', monospace", fontSize:9, color:"#334155", marginTop:1 }}>{dayData.sections.length} topic{dayData.sections.length!==1?"s":""}</div>
+                  </div>
+                  <div style={{ padding:"8px" }}>
+                    {dayData.sections.length===0 ? <div style={{ color:"#1e293b", fontSize:10, fontFamily:"'DM Mono', monospace", textAlign:"center", padding:"6px 0" }}>—</div>
+                      : dayData.sections.map(sec=>{
+                        const sc=sec.color||"#60a5fa"; const ft=sec.topic?`${sec.subject}: ${sec.topic}`:sec.subject;
+                        const groups=groupSubsByChapter(sec.subsections);
+                        return (
+                          <div key={sec.id} style={{ marginBottom:7, background:"#0a1020", border:`1px solid ${sc}33`, borderLeft:`2px solid ${sc}`, borderRadius:6, padding:"6px 8px" }}>
+                            <div style={{ fontFamily:"'DM Serif Display', serif", fontSize:11, fontWeight:700, color:"#e2e8f0", lineHeight:1.3, marginBottom:groups.length?4:0 }}>{ft}</div>
+                            {groups.map(g=>(
+                              <div key={`${g.si}-${g.ci}`} style={{ marginBottom:4 }}>
+                                <div style={{ fontFamily:"'DM Mono', monospace", fontSize:8, color:g.color, letterSpacing:"0.06em", marginBottom:2 }}>{g.chapterTitle}</div>
+                                {g.subs.map(({sub})=>{
+                                  const dn=resolveTopicName(sub.clKey,clData); const done=sub.checks.textbook&&sub.checks.claude;
+                                  return <div key={sub.id} style={{ display:"flex", gap:4, marginBottom:1 }}><span style={{ color:"#3b82f688", fontSize:9 }}>§</span><span style={{ fontSize:10, fontFamily:"'DM Serif Display', serif", color:done?"#334155":"#64748b", textDecoration:done?"line-through":"none", flex:1 }}>{dn}</span></div>;
+                                })}
+                              </div>
+                            ))}
+                          </div>
+                        );
+                      })
+                    }
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      );
+    }
+
+    // ─── ANKI TOAST ──────────────────────────────────────────────────────────────
+    function AnkiToast({ notification, onClose }) {
+      useEffect(()=>{ const t=setTimeout(onClose,8000); return()=>clearTimeout(t); },[onClose]);
+      if (!notification) return null;
+      return (
+        <div style={{ position:"fixed", bottom:24, right:24, zIndex:500, maxWidth:340 }}>
+          <div style={{ background:"#0d1a2d", border:"1px solid #f97316", borderLeft:"3px solid #f97316", borderRadius:12, padding:"16px 18px", boxShadow:"0 8px 32px #000a" }}>
+            <div style={{ display:"flex", alignItems:"flex-start", gap:10 }}>
+              <span style={{ fontSize:18, flexShrink:0 }}>🎉</span>
+              <div style={{ flex:1 }}>
+                <div style={{ fontFamily:"'DM Serif Display', serif", fontSize:14, fontWeight:700, color:"#f1f5f9", marginBottom:4 }}>Chapter Complete!</div>
+                <div style={{ fontFamily:"'DM Serif Display', serif", fontSize:12, color:"#94a3b8", lineHeight:1.5 }}>
+                  All sections of <span style={{ color:"#f97316", fontWeight:700 }}>{notification.chapterTitle}</span> reviewed. Time to add Anki cards!
+                </div>
+              </div>
+              <button onClick={onClose} style={{ background:"none", border:"none", color:"#475569", fontSize:16, lineHeight:1, flexShrink:0 }}>×</button>
+            </div>
+            <div style={{ marginTop:10, fontFamily:"'DM Mono', monospace", fontSize:10, color:"#f97316" }}>→ Go to Checklist → mark Anki for {notification.chapterTitle}</div>
+          </div>
+        </div>
+      );
+    }
+
+    // ─── CHECKLIST TAB ───────────────────────────────────────────────────────────
+    function ChecklistTab({ clData, onChange }) {
+      const [activeSubject, setActiveSubject] = useState(0);
+      const [expandedChapters, setExpandedChapters] = useState({});
+      const [editingName, setEditingName] = useState(null);
+      const [editingNameVal, setEditingNameVal] = useState("");
+      const nameInputRef = useRef(null);
+
+      function getTopicKey(si,ci,ti){ return `${si}-${ci}-${ti}`; }
+      function getTopicState(si,ci,ti){ return clData[getTopicKey(si,ci,ti)]||{rev:false,note:"",customName:null}; }
+      function setTopicState(si,ci,ti,val){ onChange({...clData,[getTopicKey(si,ci,ti)]:val}); }
+      function toggleChapterAnki(si,ci){ const k=getChapterAnkiKey(si,ci); onChange({...clData,[k]:!clData[k]}); }
+      function toggleChapter(key){ setExpandedChapters(p=>({...p,[key]:!p[key]})); }
+      function startEditName(si,ci,ti,cur){ setEditingName(`${si}-${ci}-${ti}`); setEditingNameVal(cur); }
+      function commitEditName(si,ci,ti){ const s=getTopicState(si,ci,ti); setTopicState(si,ci,ti,{...s,customName:editingNameVal.trim()||null}); setEditingName(null); }
+      useEffect(()=>{ if(editingName&&nameInputRef.current) nameInputRef.current.focus(); },[editingName]);
+
+      function subjectProgress(si){
+        const subj=CHECKLIST_DATA[si]; let total=0,done=0;
+        subj.chapters.forEach((ch,ci)=>{ const chAnki=getChapterAnki(si,ci,clData); ch.topics.forEach((_,ti)=>{ total++; const s=getTopicState(si,ci,ti); if(s.rev&&chAnki) done++; }); });
+        return { total, done, pct:total===0?0:Math.round((done/total)*100) };
+      }
+      const subj=CHECKLIST_DATA[activeSubject]; const color=subj.color;
+      const allProgress=CHECKLIST_DATA.map((_,si)=>subjectProgress(si));
+
+      return (
+        <div>
+          <div style={{ display:"flex", gap:10, marginBottom:20, flexWrap:"wrap" }}>
+            {CHECKLIST_DATA.map((s,si)=>{
+              const {done,total,pct}=allProgress[si]; const isActive=si===activeSubject;
+              const r=22,circ=2*Math.PI*r;
+              return (
+                <button key={si} onClick={()=>setActiveSubject(si)} style={{ flex:"1 1 100px", background:isActive?`${s.color}11`:"#070f1c", border:`1px solid ${isActive?s.color+"66":"#1e293b"}`, borderRadius:12, padding:"12px 10px", display:"flex", flexDirection:"column", alignItems:"center", gap:8, transition:"all 0.15s" }}>
+                  <div style={{ position:"relative", width:52, height:52 }}>
+                    <svg width="52" height="52" style={{ transform:"rotate(-90deg)" }}>
+                      <circle cx="26" cy="26" r={r} stroke="#1e293b" strokeWidth="4" fill="transparent"/>
+                      <circle cx="26" cy="26" r={r} stroke={s.color} strokeWidth="4" fill="transparent" strokeDasharray={circ} strokeDashoffset={circ-(pct/100)*circ} strokeLinecap="round" style={{ transition:"stroke-dashoffset 0.5s ease" }}/>
+                    </svg>
+                    <div style={{ position:"absolute", inset:0, display:"flex", alignItems:"center", justifyContent:"center", fontFamily:"'DM Mono', monospace", fontSize:10, color:isActive?s.color:"#64748b", fontWeight:500 }}>{pct}%</div>
+                  </div>
+                  <span style={{ fontFamily:"'DM Mono', monospace", fontSize:9, letterSpacing:"0.1em", color:isActive?s.color:"#475569", textTransform:"uppercase", textAlign:"center", lineHeight:1.3 }}>{s.subject}</span>
+                  <span style={{ fontFamily:"'DM Mono', monospace", fontSize:9, color:"#334155" }}>{done}/{total}</span>
+                </button>
+              );
+            })}
+          </div>
+          <div style={{ background:"#070f1c", border:`1px solid ${color}33`, borderTop:`2px solid ${color}`, borderRadius:12, overflow:"hidden" }}>
+            <div style={{ padding:"16px 20px", background:`${color}0d`, borderBottom:`1px solid ${color}22`, display:"flex", alignItems:"center", justifyContent:"space-between" }}>
+              <div>
+                <div style={{ fontFamily:"'DM Mono', monospace", fontSize:10, letterSpacing:"0.15em", color, textTransform:"uppercase", marginBottom:2 }}>Master Checklist</div>
+                <div style={{ fontFamily:"'DM Serif Display', serif", fontSize:20, fontWeight:700, color:"#f1f5f9" }}>{subj.subject}</div>
+              </div>
+              <div style={{ textAlign:"right" }}>
+                <div style={{ fontFamily:"'DM Mono', monospace", fontSize:10, color:"#475569", marginBottom:4 }}>TOTAL PROGRESS</div>
+                <div style={{ display:"flex", alignItems:"center", gap:8 }}>
+                  <div style={{ width:120, height:4, background:"#0d1a2d", borderRadius:2, overflow:"hidden" }}>
+                    <div style={{ height:"100%", width:`${allProgress[activeSubject].pct}%`, background:color, borderRadius:2, transition:"width 0.4s" }}/>
+                  </div>
+                  <span style={{ fontFamily:"'DM Mono', monospace", fontSize:11, color }}>{allProgress[activeSubject].pct}%</span>
+                </div>
+              </div>
+            </div>
+            <div style={{ display:"grid", gridTemplateColumns:"1fr 200px 52px", padding:"6px 20px", background:"#0a1425", borderBottom:"1px solid #0f2040" }}>
+              <span style={{ fontFamily:"'DM Mono', monospace", fontSize:9, letterSpacing:"0.12em", color:"#334155" }}>SUB-TOPIC</span>
+              <span style={{ fontFamily:"'DM Mono', monospace", fontSize:9, letterSpacing:"0.12em", color:"#334155" }}>QUICK NOTE</span>
+              <span style={{ fontFamily:"'DM Mono', monospace", fontSize:9, letterSpacing:"0.12em", color:"#4ade8077", textAlign:"center" }}>REV</span>
+            </div>
+            {subj.chapters.map((ch,ci)=>{
+              const chKey=`${activeSubject}-${ci}`; const isOpen=expandedChapters[chKey]!==false;
+              const chAnki=getChapterAnki(activeSubject,ci,clData);
+              const revDone=ch.topics.filter((_,ti)=>getTopicState(activeSubject,ci,ti).rev).length;
+              const allReved=revDone===ch.topics.length&&ch.topics.length>0;
+              return (
+                <div key={ci} style={{ borderBottom:"1px solid #0f2040" }}>
+                  <div style={{ display:"flex", alignItems:"center", background:"#0a1425", padding:"0 20px" }}>
+                    <button onClick={()=>toggleChapter(chKey)} style={{ flex:1, display:"flex", alignItems:"center", gap:8, padding:"9px 0", background:"none", border:"none", textAlign:"left" }}>
+                      <span style={{ fontFamily:"'DM Mono', monospace", fontSize:10, color, letterSpacing:"0.06em" }}>{isOpen?"▾":"▸"}</span>
+                      <span style={{ fontFamily:"'DM Serif Display', serif", fontSize:13, fontWeight:700, color:"#94a3b8" }}>{ch.title}</span>
+                      <span style={{ fontFamily:"'DM Mono', monospace", fontSize:10, color:allReved?"#4ade80":"#334155", marginLeft:4 }}>{revDone}/{ch.topics.length} rev</span>
+                      {allReved&&!chAnki&&<span style={{ fontFamily:"'DM Mono', monospace", fontSize:9, color:"#f97316", background:"#f9731611", border:"1px solid #f9731633", borderRadius:10, padding:"1px 6px", marginLeft:4 }}>→ Add Anki!</span>}
+                    </button>
+                    <button onClick={()=>toggleChapterAnki(activeSubject,ci)} style={{ display:"flex", alignItems:"center", gap:5, padding:"4px 10px", borderRadius:20, border:`1.5px solid ${chAnki?"#f97316":"#1e3a5f"}`, background:chAnki?"#f9731622":"transparent", transition:"all 0.15s", flexShrink:0 }}>
+                      <span style={{ width:13, height:13, borderRadius:"50%", flexShrink:0, border:`1.5px solid ${chAnki?"#f97316":"#334155"}`, background:chAnki?"#f97316":"transparent", display:"flex", alignItems:"center", justifyContent:"center" }}>
+                        {chAnki&&<svg width="8" height="8" viewBox="0 0 8 8" fill="none"><path d="M1.5 4L3.2 5.7L6.5 2.3" stroke="#0f172a" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"/></svg>}
+                      </span>
+                      <span style={{ fontFamily:"'DM Mono', monospace", fontSize:10, color:chAnki?"#f97316":"#334155" }}>Anki</span>
+                    </button>
+                  </div>
+                  {isOpen&&ch.topics.map((topic,ti)=>{
+                    const state=getTopicState(activeSubject,ci,ti);
+                    const displayName=state.customName??topic;
+                    const isEditingThis=editingName===`${activeSubject}-${ci}-${ti}`;
+                    const rowDone=state.rev&&chAnki;
+                    function upd(patch){ setTopicState(activeSubject,ci,ti,{...state,...patch}); }
+                    return (
+                      <div key={ti} style={{ display:"grid", gridTemplateColumns:"1fr 200px 52px", alignItems:"center", padding:"7px 20px 7px 32px", background:rowDone?"#0a1a12":state.rev?"#0a1520":"#07101e", borderTop:"1px solid #0d1a2d", transition:"background 0.2s" }}>
+                        <div style={{ display:"flex", alignItems:"center", gap:6 }}>
+                          {isEditingThis?(
+                            <input ref={nameInputRef} value={editingNameVal} onChange={e=>setEditingNameVal(e.target.value)} onBlur={()=>commitEditName(activeSubject,ci,ti)} onKeyDown={e=>{ if(e.key==="Enter"||e.key==="Escape") commitEditName(activeSubject,ci,ti); }}
+                              style={{ flex:1, background:"#0d1a2d", border:"1px solid #3b82f6", borderRadius:4, color:"#e2e8f0", fontSize:12, fontFamily:"'DM Serif Display', serif", padding:"2px 6px" }}
+                            />
+                          ):(
+                            <>
+                              <span style={{ fontFamily:"'DM Serif Display', serif", fontSize:12, color:rowDone?"#334155":state.rev?"#4ade8099":"#64748b", textDecoration:rowDone?"line-through":"none", lineHeight:1.4, flex:1 }}>{displayName}</span>
+                              <button onClick={()=>startEditName(activeSubject,ci,ti,displayName)} style={{ background:"none", border:"none", color:"#1e3a5f", fontSize:10, lineHeight:1, flexShrink:0, opacity:0.6 }}>✎</button>
+                            </>
+                          )}
+                        </div>
+                        <input value={state.note||""} onChange={e=>upd({note:e.target.value})} placeholder="Quick note..."
+                          style={{ background:"transparent", border:"none", borderBottom:"1px dashed #1e293b", color:"#475569", fontSize:11, fontFamily:"'DM Serif Display', serif", fontStyle:"italic", padding:"2px 4px", width:"100%" }}
+                        />
+                        <div style={{ display:"flex", justifyContent:"center" }}>
+                          <button onClick={()=>upd({rev:!state.rev})} style={{ width:20, height:20, borderRadius:4, border:`1.5px solid ${state.rev?"#4ade80":"#1e3a5f"}`, background:state.rev?"#4ade8022":"transparent", display:"flex", alignItems:"center", justifyContent:"center" }}>
+                            {state.rev&&<svg width="10" height="10" viewBox="0 0 10 10" fill="none"><path d="M1.5 5L4 7.5L8.5 2.5" stroke="#4ade80" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>}
+                          </button>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      );
+    }
+
+    // ─── MAIN APP ────────────────────────────────────────────────────────────────
+    function MCATDashboard() {
+      const [weekIndex, setWeekIndex] = useState(()=>getWeekIndex(new Date()));
+      const [allData, setAllData] = useState({});
+      const [clData, setClData] = useState({});
+      const [loading, setLoading] = useState(true);
+      const [syncStatus, setSyncStatus] = useState("idle"); // idle | saving | saved | error
+      const [activeTab, setActiveTab] = useState("planner");
+      const [ankiNotification, setAnkiNotification] = useState(null);
+      const notifiedChapters = useRef(new Set());
+      const saveTimer = useRef(null);
+
+      // Load from Supabase on mount
+      useEffect(()=>{
+        async function load() {
+          const [pd, cd] = await Promise.all([dbLoad("planner"), dbLoad("checklist")]);
+          setAllData(pd || {});
+          setClData(cd || {});
+          setLoading(false);
+        }
+        load();
+      },[]);
+
+      // Debounced auto-save — waits 1.5s after last change before writing to Supabase
+      function triggerSave(plannerData, checklistData) {
+        clearTimeout(saveTimer.current);
+        setSyncStatus("saving");
+        saveTimer.current = setTimeout(async ()=>{
+          try {
+            await Promise.all([
+              dbSave("planner",   plannerData),
+              dbSave("checklist", checklistData),
+            ]);
+            setSyncStatus("saved");
+            setTimeout(()=>setSyncStatus("idle"), 2000);
+          } catch(e) {
+            setSyncStatus("error");
+            console.error("Save failed:", e);
+          }
+        }, 1500);
+      }
+
+      function setAllDataAndSave(fn) {
+        setAllData(prev => {
+          const next = typeof fn==="function" ? fn(prev) : fn;
+          triggerSave(next, clData);
+          return next;
+        });
+      }
+      function setClDataAndSave(next) {
+        setClData(next);
+        triggerSave(allData, next);
+      }
+
+      const weekKey=`week_${weekIndex}`;
+      const weekData=allData[weekKey]??defaultWeek();
+      function updateWeek(u){ setAllDataAndSave(p=>({...p,[weekKey]:u})); }
+      function updateDay(day,v){ updateWeek({...weekData,days:{...weekData.days,[day]:v}}); }
+      function handleMoveSection(sourceDay,targetDay,sec){
+        const sd=weekData.days[sourceDay]??{sections:[]};
+        const td=weekData.days[targetDay]??{sections:[]};
+        updateWeek({...weekData,days:{...weekData.days,[sourceDay]:{...sd,sections:sd.sections.filter(s=>s.id!==sec.id)},[targetDay]:{...td,sections:[sec,...td.sections]}}});
+      }
+      function handleChapterComplete(info){
+        const key=`${info.si}-${info.ci}`;
+        if(notifiedChapters.current.has(key)) return;
+        if(getChapterAnki(info.si,info.ci,clData)) return;
+        notifiedChapters.current.add(key);
+        setAnkiNotification(info);
+      }
+
+      const allSubs=Object.values(weekData.days).flatMap(d=>d.sections.flatMap(s=>s.subsections));
+      const total=allSubs.length;
+      const doneTextbook=allSubs.filter(s=>s.checks.textbook).length;
+      const doneClaude=allSubs.filter(s=>s.checks.claude).length;
+      const allUsedClKeys=new Set(allSubs.map(s=>s.clKey).filter(Boolean));
+
+      const TABS=[{id:"planner",label:"Planner"},{id:"overview",label:"Week Overview"},{id:"checklist",label:"Checklist"}];
+
+      const syncColor = syncStatus==="saved"?"#4ade80":syncStatus==="saving"?"#f97316":syncStatus==="error"?"#f43f5e":"transparent";
+      const syncText  = syncStatus==="saved"?"✓ saved":syncStatus==="saving"?"saving…":syncStatus==="error"?"⚠ error":"";
+
+      if (loading) return (
+        <div style={{ minHeight:"100vh", background:"#040c17", display:"flex", alignItems:"center", justifyContent:"center", flexDirection:"column", gap:16 }}>
+          <div style={{ width:40, height:40, borderRadius:"50%", border:"3px solid #1e3a5f", borderTopColor:"#3b82f6", animation:"spin 0.8s linear infinite" }}/>
+          <style>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style>
+          <div style={{ fontFamily:"'DM Mono', monospace", fontSize:12, color:"#475569" }}>Loading your dashboard…</div>
+        </div>
+      );
+
+      return (
+        <div style={{ minHeight:"100vh", background:"#040c17", color:"#e2e8f0", fontFamily:"'DM Serif Display', serif", paddingBottom:80 }}>
+          <AnkiToast notification={ankiNotification} onClose={()=>setAnkiNotification(null)}/>
+
+          {/* Header */}
+          <div style={{ background:"linear-gradient(180deg,#060f1d,#040c17)", borderBottom:"1px solid #0f2040", padding:"24px 32px 0", position:"sticky", top:0, zIndex:10 }}>
+            <div style={{ maxWidth:1100, margin:"0 auto" }}>
+              <div style={{ display:"flex", alignItems:"flex-start", justifyContent:"space-between", flexWrap:"wrap", gap:12, paddingBottom:16 }}>
+                <div>
+                  <div style={{ fontFamily:"'DM Mono', monospace", fontSize:10, letterSpacing:"0.2em", color:"#3b82f6", marginBottom:4 }}>MCAT STUDY TRACKER</div>
+                  <h1 style={{ fontSize:24, fontWeight:400, margin:0, color:"#f1f5f9", fontStyle:"italic" }}>Weekly Dashboard</h1>
+                </div>
+                <div style={{ display:"flex", alignItems:"center", gap:10 }}>
+                  <button onClick={()=>setWeekIndex(i=>Math.max(0,i-1))} disabled={weekIndex===0} style={{ background:"#0d1a2d", border:"1px solid #1e3a5f", borderRadius:8, color:weekIndex===0?"#1e3a5f":"#60a5fa", width:32, height:32, fontSize:16, display:"flex", alignItems:"center", justifyContent:"center" }}>‹</button>
+                  <div style={{ textAlign:"center", minWidth:145 }}>
+                    <div style={{ fontFamily:"'DM Mono', monospace", fontSize:11, color:"#3b82f6", letterSpacing:"0.08em" }}>WEEK {weekIndex+1}</div>
+                    <div style={{ fontFamily:"'DM Mono', monospace", fontSize:11, color:"#475569" }}>{weekLabel(weekIndex)}</div>
+                  </div>
+                  <button onClick={()=>setWeekIndex(i=>i+1)} style={{ background:"#0d1a2d", border:"1px solid #1e3a5f", borderRadius:8, color:"#60a5fa", width:32, height:32, fontSize:16, display:"flex", alignItems:"center", justifyContent:"center" }}>›</button>
+                  {syncText&&<span style={{ fontFamily:"'DM Mono', monospace", fontSize:10, color:syncColor, marginLeft:4, transition:"color 0.3s" }}>{syncText}</span>}
+                </div>
+              </div>
+
+              {activeTab!=="checklist"&&total>0&&(
+                <div style={{ display:"flex", gap:8, alignItems:"center", flexWrap:"wrap", paddingBottom:14 }}>
+                  {[["Textbook",doneTextbook,"#4ade80"],["Claude",doneClaude,"#60a5fa"]].map(([label,val,color])=>(
+                    <div key={label} style={{ display:"flex", alignItems:"center", gap:6, flex:1, minWidth:130 }}>
+                      <span style={{ fontFamily:"'DM Mono', monospace", fontSize:10, color:"#475569", width:52 }}>{label}</span>
+                      <div style={{ flex:1, height:3, background:"#0d1a2d", borderRadius:2, overflow:"hidden" }}>
+                        <div style={{ height:"100%", width:`${(val/total)*100}%`, background:color, borderRadius:2, transition:"width 0.3s" }}/>
+                      </div>
+                      <span style={{ fontFamily:"'DM Mono', monospace", fontSize:10, color:"#475569" }}>{val}/{total}</span>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              <div style={{ display:"flex", gap:0, borderTop:"1px solid #0f2040" }}>
+                {TABS.map(tab=>(
+                  <button key={tab.id} onClick={()=>setActiveTab(tab.id)} style={{ background:"none", border:"none", fontFamily:"'DM Mono', monospace", fontSize:12, letterSpacing:"0.06em", color:activeTab===tab.id?"#60a5fa":"#475569", padding:"10px 20px 9px", borderBottom:`2px solid ${activeTab===tab.id?"#60a5fa":"transparent"}`, transition:"all 0.15s", marginBottom:-1 }}>{tab.label.toUpperCase()}</button>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          {/* Body */}
+          <div style={{ maxWidth:1100, margin:"0 auto", padding:"24px 24px 0" }}>
+            {activeTab==="planner"&&(
+              <>
+                <div style={{ display:"flex", alignItems:"center", gap:12, marginBottom:14 }}>
+                  <span style={{ fontFamily:"'DM Mono', monospace", fontSize:10, letterSpacing:"0.2em", color:"#3b82f6", textTransform:"uppercase", flexShrink:0 }}>Daily Schedule</span>
+                  <div style={{ flex:1, height:1, background:"linear-gradient(90deg, #1e3a5f, transparent)" }}/>
+                </div>
+                {DAYS.map(day=>(
+                  <DayPanel key={day} day={day}
+                    data={weekData.days[day]??{sections:[]}}
+                    onChange={v=>updateDay(day,v)}
+                    onMoveSection={handleMoveSection}
+                    clData={clData} onClDataChange={setClDataAndSave}
+                    onChapterComplete={handleChapterComplete}
+                    allUsedClKeys={allUsedClKeys}
+                  />
+                ))}
+              </>
+            )}
+            {activeTab==="overview"&&(
+              <>
+                <div style={{ display:"flex", alignItems:"center", gap:12, marginBottom:16 }}>
+                  <span style={{ fontFamily:"'DM Mono', monospace", fontSize:10, letterSpacing:"0.2em", color:"#3b82f6", textTransform:"uppercase", flexShrink:0 }}>Week at a Glance</span>
+                  <div style={{ flex:1, height:1, background:"linear-gradient(90deg, #1e3a5f, transparent)" }}/>
+                  <span style={{ fontFamily:"'DM Mono', monospace", fontSize:10, color:"#334155" }}>read-only · edit in Planner</span>
+                </div>
+                <WeekOverview weekData={weekData} clData={clData}/>
+              </>
+            )}
+            {activeTab==="checklist"&&(
+              <>
+                <div style={{ display:"flex", alignItems:"center", gap:12, marginBottom:16 }}>
+                  <span style={{ fontFamily:"'DM Mono', monospace", fontSize:10, letterSpacing:"0.2em", color:"#3b82f6", textTransform:"uppercase", flexShrink:0 }}>Master Checklist</span>
+                  <div style={{ flex:1, height:1, background:"linear-gradient(90deg, #1e3a5f, transparent)" }}/>
+                  <span style={{ fontFamily:"'DM Mono', monospace", fontSize:10, color:"#334155" }}>Rev = per subtopic · Anki = per chapter · ✎ = edit name</span>
+                </div>
+                <ChecklistTab clData={clData} onChange={setClDataAndSave}/>
+              </>
+            )}
+          </div>
+        </div>
+      );
+    }
+
+    ReactDOM.createRoot(document.getElementById("root")).render(<MCATDashboard/>);
+  </script>
+</body>
+</html>
