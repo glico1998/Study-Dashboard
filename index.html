@@ -637,8 +637,7 @@
                     All {CHECKLIST_DATA[clSubjIdx].chapters[clChapIdx].topics.filter((_,ti)=>!existingKeys.has(`${clSubjIdx}-${clChapIdx}-${ti}`)).length} available sections will be added
                   </div>
                 </div>
-              
-              
+              )}
               <div style={{ display:"flex", justifyContent:"space-between", gap:8 }}>
                 <button onClick={()=>setStep(2)} style={{ ...btn, background:"none", border:"1px solid var(--border)", color:"var(--text-faint)" }}>← Back</button>
                 <button onClick={handleConfirm} disabled={clChapIdx===null} style={{ ...btn, background:clChapIdx!==null?"#3b82f622":"var(--bg-input)", border:`1px solid ${clChapIdx!==null?"#3b82f6":"var(--border)"}`, color:clChapIdx!==null?"#60a5fa":"var(--text-faint)", opacity:clChapIdx!==null?1:0.4 }}>Add Topic Block ✓</button>
