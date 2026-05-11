@@ -182,14 +182,11 @@
     ];
 
     const PLANNER_SUBJECTS = [
-      { label:"Biochemistry (I)",  baseSubject:"Biochemistry",   color:"#f97316" },
-      { label:"Biochemistry (II)", baseSubject:"Biochemistry",   color:"#fb923c" },
-      { label:"Biology (I)",       baseSubject:"Biology",        color:"#4ade80" },
-      { label:"Biology (II)",      baseSubject:"Biology",        color:"#22c55e" },
-      { label:"Chemistry (I)",     baseSubject:"Chemistry",      color:"#60a5fa" },
-      { label:"Chemistry (II)",    baseSubject:"Chemistry",      color:"#3b82f6" },
-      { label:"Physics (I)",       baseSubject:"Physics & Math", color:"#c084fc" },
-      { label:"Physics (II)",      baseSubject:"Physics & Math", color:"#a855f7" },
+      { label:"Biochemistry",    baseSubject:"Biochemistry",    color:"#f97316" },
+      { label:"Biology",         baseSubject:"Biology",         color:"#4ade80" },
+      { label:"Chemistry",       baseSubject:"Chemistry",       color:"#60a5fa" },
+      { label:"Physics & Math",  baseSubject:"Physics & Math",  color:"#c084fc" },
+      { label:"Organic Chemistry",baseSubject:"Organic Chemistry",color:"#fb923c" },
     ];
 
     const DAYS = ["Monday","Tuesday","Wednesday","Thursday","Friday","Saturday","Sunday"];
@@ -210,7 +207,7 @@
       return { si, ci, ti, subjectData:sd, chapter:ch, topicName: ch.topics[ti] || k };
     }
     function newLinkedSubsection(clKey) {
-      return { id:crypto.randomUUID(), clKey, checks:{ textbook:false, claude:false }, subheadings:[] };
+      return { id:crypto.randomUUID(), clKey, checks:{ textbook:false, claude:false }, subheadings:[], learningObjectives:"" };
     }
     function newSubheading() {
       return { id:crypto.randomUUID(), title:"", checks:{ textbook:false, claude:false } };
@@ -340,6 +337,15 @@
             </div>
           )}
           <button onClick={addSubheading} style={{ marginTop:6, background:"none", border:"none", color:"var(--text-ghost)", fontSize:11, fontFamily:"'DM Mono', monospace", padding:0 }}>+ subheading</button>
+          {/* Learning Objectives */}
+          <div style={{ marginTop:10 }}>
+            <div style={{ fontFamily:"'DM Mono', monospace", fontSize:9, color:"var(--text-ghost)", letterSpacing:"0.1em", marginBottom:4 }}>LEARNING OBJECTIVES</div>
+            <textarea value={sub.learningObjectives||""} onChange={e=>onChange({...sub,learningObjectives:e.target.value})}
+              placeholder="e.g. Understand quantum numbers, describe electron orbitals..."
+              rows={2}
+              style={{ width:"100%", background:"var(--bg-deeper)", border:"1px dashed var(--border-mid)", borderRadius:6, color:"var(--text-muted)", fontSize:11, fontFamily:"'DM Serif Display', serif", fontStyle:"italic", lineHeight:1.5, padding:"6px 8px" }}
+            />
+          </div>
         </div>
       );
     }
@@ -364,8 +370,49 @@
               {sub.subheadings.map((sh,i)=><SubheadingView key={sh.id} sh={sh} onChange={u=>updateSh(i,u)}/>)}
             </div>
           )}
+          {(sub.learningObjectives||"").trim()&&(
+            <div style={{ marginTop:8, paddingTop:6, borderTop:"1px dashed var(--border-mid)" }}>
+              <div style={{ fontFamily:"'DM Mono', monospace", fontSize:9, color:"#3b82f688", letterSpacing:"0.1em", marginBottom:3 }}>LEARNING OBJECTIVES</div>
+              <div style={{ fontFamily:"'DM Serif Display', serif", fontSize:11, color:"var(--text-dim)", fontStyle:"italic", lineHeight:1.5 }}>{sub.learningObjectives}</div>
+            </div>
+          )}
         </div>
       );
+    }
+
+    // ─── GENERATE SUMMARY ────────────────────────────────────────────────────────
+    function generateSummary(sec, clData) {
+      const groups = groupSubsByChapter(sec.subsections);
+      let lines = [];
+      lines.push(`${sec.subject}: ${sec.topic||"Untitled"}`);
+      lines.push("");
+      groups.forEach(g => {
+        g.subs.forEach(({ sub }) => {
+          const name = resolveTopicName(sub.clKey, clData);
+          lines.push(`(Section): ${name}`);
+          if (sub.subheadings && sub.subheadings.length > 0) {
+            sub.subheadings.forEach(sh => {
+              if (sh.title.trim()) lines.push(`  - ${sh.title}`);
+            });
+          }
+          if ((sub.learningObjectives||"").trim()) {
+            lines.push(`  Learning Objectives: ${sub.learningObjectives.trim()}`);
+          }
+          lines.push("");
+        });
+      });
+      const text = lines.join("\n").trim();
+      navigator.clipboard.writeText(text).then(() => {
+        // Flash a toast
+        const toast = document.createElement("div");
+        toast.textContent = "✓ Summary copied to clipboard!";
+        toast.style.cssText = "position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#1e3a5f;color:#60a5fa;padding:10px 20px;border-radius:8px;font-family:'DM Mono',monospace;font-size:12px;z-index:999;border:1px solid #3b82f6;";
+        document.body.appendChild(toast);
+        setTimeout(() => toast.remove(), 2500);
+      }).catch(() => {
+        // Fallback: show in prompt
+        prompt("Copy this summary:", text);
+      });
     }
 
     // ─── SECTION CARD ────────────────────────────────────────────────────────────
@@ -415,6 +462,9 @@
               {allSubsDone&&<span style={{ fontSize:11, marginLeft:8, color:"#4ade80" }}>✓ Complete</span>}
             </span>
             <div style={{ display:"flex", gap:6, alignItems:"center", flexShrink:0 }}>
+              <button onClick={()=>generateSummary(sec, clData)} style={{ background:`${color}22`, border:`1px solid ${color}55`, borderRadius:6, color, fontSize:10, fontFamily:"'DM Mono', monospace", padding:"2px 8px", display:"flex", alignItems:"center", gap:4 }}>
+                <span>📋</span><span>Copy Summary</span>
+              </button>
               <button onClick={onMoveRequest} style={{ background:"none", border:"1px solid var(--border-accent)", borderRadius:6, color:"var(--text-faint)", fontSize:10, fontFamily:"'DM Mono', monospace", padding:"2px 7px" }}>move →</button>
               <button onClick={()=>setEditing(true)} style={{ background:"none", border:`1px solid ${color}55`, borderRadius:6, color, fontSize:10, fontFamily:"'DM Mono', monospace", padding:"2px 7px" }}>edit</button>
               <button onClick={onDelete} style={{ background:"none", border:"none", color:"var(--text-ghost)", fontSize:18, lineHeight:1 }}>×</button>
@@ -504,8 +554,19 @@
       useEffect(()=>{ if(step===2&&topicRef.current) topicRef.current.focus(); },[step]);
       function toggleKey(k){ setSelectedKeys(p=>{ const s=new Set(p); s.has(k)?s.delete(k):s.add(k); return s; }); }
       function handleConfirm() {
-        if(!pickedSubject||selectedKeys.size===0) return;
-        onConfirm({ id:crypto.randomUUID(), subject:pickedSubject.label, baseSubject:pickedSubject.baseSubject, color:pickedSubject.color, topic:topicName.trim(), videosWatched:false, notes:"", subsections:[...selectedKeys].map(k=>newLinkedSubsection(k)), saved:false, minimized:false });
+        if(!pickedSubject||clSubjIdx===null||clChapIdx===null) return;
+        const ch = CHECKLIST_DATA[clSubjIdx].chapters[clChapIdx];
+        const subsections = ch.topics
+          .map((_,ti) => `${clSubjIdx}-${clChapIdx}-${ti}`)
+          .filter(k => !existingKeys.has(k))
+          .map(k => newLinkedSubsection(k));
+        if (subsections.length === 0) return;
+        onConfirm({ id:crypto.randomUUID(), subject:pickedSubject.label, baseSubject:pickedSubject.baseSubject, color:pickedSubject.color, topic:topicName.trim(), videosWatched:false, notes:"", subsections, saved:false, minimized:false });
+      }
+      function goToStep3() {
+        const matchIdx = CHECKLIST_DATA.findIndex(s => s.subject === pickedSubject.baseSubject);
+        if (matchIdx >= 0) { setClSubjIdx(matchIdx); setClChapIdx(null); }
+        setStep(3);
       }
       const btn = { borderRadius:8, fontFamily:"'DM Mono', monospace", fontSize:12, padding:"6px 16px", transition:"all 0.15s" };
       return (
@@ -517,10 +578,10 @@
             </div>
             {step===1&&(<>
               <div style={{ fontFamily:"'DM Mono', monospace", fontSize:10, letterSpacing:"0.15em", color:"#3b82f6", marginBottom:12 }}>CHOOSE SUBJECT</div>
-              <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:8 }}>
+              <div style={{ display:"flex", flexDirection:"column", gap:8 }}>
                 {PLANNER_SUBJECTS.map(s=>(
-                  <button key={s.label} onClick={()=>setPickedSubject(s)} style={{ ...btn, padding:"10px 12px", textAlign:"left", background:pickedSubject?.label===s.label?`${s.color}22`:"var(--bg-card)", border:`1px solid ${pickedSubject?.label===s.label?s.color:"var(--border)"}`, color:pickedSubject?.label===s.label?s.color:"var(--text-dim)", display:"flex", alignItems:"center", gap:8 }}>
-                    <span style={{ width:8, height:8, borderRadius:"50%", background:s.color, flexShrink:0 }}/><span>{s.label}</span>
+                  <button key={s.label} onClick={()=>setPickedSubject(s)} style={{ ...btn, padding:"12px 16px", textAlign:"left", background:pickedSubject?.label===s.label?`${s.color}22`:"var(--bg-card)", border:`1px solid ${pickedSubject?.label===s.label?s.color:"var(--border)"}`, color:pickedSubject?.label===s.label?s.color:"var(--text-dim)", display:"flex", alignItems:"center", gap:10, fontSize:14, fontFamily:"'DM Serif Display', serif" }}>
+                    <span style={{ width:10, height:10, borderRadius:"50%", background:s.color, flexShrink:0 }}/><span>{s.label}</span>
                   </button>
                 ))}
               </div>
@@ -539,7 +600,7 @@
               />
               <div style={{ display:"flex", justifyContent:"space-between", marginTop:20, gap:8 }}>
                 <button onClick={()=>setStep(1)} style={{ ...btn, background:"none", border:"1px solid var(--border)", color:"var(--text-faint)" }}>← Back</button>
-                <button onClick={()=>setStep(3)} disabled={!topicName.trim()} style={{ ...btn, background:topicName.trim()?`${pickedSubject.color}22`:"var(--bg-input)", border:`1px solid ${topicName.trim()?pickedSubject.color:"var(--border)"}`, color:topicName.trim()?pickedSubject.color:"var(--text-faint)", opacity:topicName.trim()?1:0.4 }}>Next →</button>
+                <button onClick={()=>goToStep3()} disabled={!topicName.trim()} style={{ ...btn, background:topicName.trim()?`${pickedSubject.color}22`:"var(--bg-input)", border:`1px solid ${topicName.trim()?pickedSubject.color:"var(--border)"}`, color:topicName.trim()?pickedSubject.color:"var(--text-faint)", opacity:topicName.trim()?1:0.4 }}>Next →</button>
               </div>
             </>)}
             {step===3&&(<>
@@ -561,12 +622,24 @@
               )}
               {clSubjIdx!==null&&clChapIdx!==null&&(
                 <div style={{ marginBottom:16 }}>
-                  <div style={{ fontFamily:"'DM Mono', monospace", fontSize:9, letterSpacing:"0.1em", color:"var(--text-ghost)", marginBottom:6 }}>SUBTOPICS — click to select</div>
+                  <div style={{ fontFamily:"'DM Mono', monospace", fontSize:9, letterSpacing:"0.1em", color:"var(--text-ghost)", marginBottom:8 }}>SECTIONS IN THIS CHAPTER</div>
                   <div style={{ display:"flex", flexDirection:"column", gap:3 }}>
                     {CHECKLIST_DATA[clSubjIdx].chapters[clChapIdx].topics.map((t,ti)=>{
-                      const k=`${clSubjIdx}-${clChapIdx}-${ti}`; const sel=selectedKeys.has(k); const already=existingKeys.has(k); const c=CHECKLIST_DATA[clSubjIdx].color;
+                      const k=`${clSubjIdx}-${clChapIdx}-${ti}`; const already=existingKeys.has(k); const c=CHECKLIST_DATA[clSubjIdx].color;
                       return (
-                        <button key={ti} onClick={()=>!already&&toggleKey(k)} style={{ ...btn, padding:"6px 12px", textAlign:"left", background:sel?`${c}22`:already?"var(--bg-inner)":"var(--bg-card)", border:`1px solid ${sel?c:already?"#1e293b55":"var(--border)"}`, color:sel?c:already?"var(--text-ghost)":"var(--text-dim)", fontSize:12, fontFamily:"'DM Serif Display', serif", display:"flex", alignItems:"center", gap:8, cursor:already?"default":"pointer" }}>
+                        <div key={ti} style={{ padding:"6px 12px", background:already?"var(--bg-inner)":"var(--bg-card)", border:`1px solid ${already?"var(--border)":"var(--border)"}`, borderRadius:8, display:"flex", alignItems:"center", gap:8 }}>
+                          <span style={{ width:6, height:6, borderRadius:"50%", background:already?"var(--text-ghost)":c, flexShrink:0 }}/>
+                          <span style={{ fontSize:12, fontFamily:"'DM Serif Display', serif", color:already?"var(--text-phantom)":"var(--text-dim)", textDecoration:already?"line-through":"none", opacity:already?0.5:1, flex:1 }}>{t}</span>
+                          {already&&<span style={{ fontFamily:"'DM Mono', monospace", fontSize:9, color:"var(--text-phantom)" }}>in use</span>}
+                        </div>
+                      );
+                    })}
+                  </div>
+                  <div style={{ marginTop:10, fontFamily:"'DM Mono', monospace", fontSize:10, color:"#3b82f6" }}>
+                    All {CHECKLIST_DATA[clSubjIdx].chapters[clChapIdx].topics.filter((_,ti)=>!existingKeys.has(`${clSubjIdx}-${clChapIdx}-${ti}`)).length} available sections will be added
+                  </div>
+                </div>
+              )} style={{ ...btn, padding:"6px 12px", textAlign:"left", background:sel?`${c}22`:already?"var(--bg-inner)":"var(--bg-card)", border:`1px solid ${sel?c:already?"#1e293b55":"var(--border)"}`, color:sel?c:already?"var(--text-ghost)":"var(--text-dim)", fontSize:12, fontFamily:"'DM Serif Display', serif", display:"flex", alignItems:"center", gap:8, cursor:already?"default":"pointer" }}>
                           <span style={{ width:12, height:12, borderRadius:3, flexShrink:0, border:`1.5px solid ${sel?c:already?"var(--border-accent)":"var(--text-ghost)"}`, background:sel?c:"transparent", display:"flex", alignItems:"center", justifyContent:"center" }}>
                             {sel&&<svg width="7" height="7" viewBox="0 0 7 7" fill="none"><path d="M1 3.5L2.8 5.2L6 1.5" stroke="#0f172a" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round"/></svg>}
                           </span>
@@ -581,7 +654,7 @@
               {selectedKeys.size>0&&<div style={{ fontFamily:"'DM Mono', monospace", fontSize:10, color:"#3b82f6", marginBottom:12 }}>{selectedKeys.size} subtopic{selectedKeys.size!==1?"s":""} selected</div>}
               <div style={{ display:"flex", justifyContent:"space-between", gap:8 }}>
                 <button onClick={()=>setStep(2)} style={{ ...btn, background:"none", border:"1px solid var(--border)", color:"var(--text-faint)" }}>← Back</button>
-                <button onClick={handleConfirm} disabled={selectedKeys.size===0} style={{ ...btn, background:selectedKeys.size>0?"#3b82f622":"var(--bg-input)", border:`1px solid ${selectedKeys.size>0?"#3b82f6":"var(--border)"}`, color:selectedKeys.size>0?"#60a5fa":"var(--text-faint)", opacity:selectedKeys.size>0?1:0.4 }}>Add Topic Block ✓</button>
+                <button onClick={handleConfirm} disabled={clChapIdx===null} style={{ ...btn, background:clChapIdx!==null?"#3b82f622":"var(--bg-input)", border:`1px solid ${clChapIdx!==null?"#3b82f6":"var(--border)"}`, color:clChapIdx!==null?"#60a5fa":"var(--text-faint)", opacity:clChapIdx!==null?1:0.4 }}>Add Topic Block ✓</button>
               </div>
             </>)}
           </div>
