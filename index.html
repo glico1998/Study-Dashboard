@@ -637,13 +637,7 @@
                     All {CHECKLIST_DATA[clSubjIdx].chapters[clChapIdx].topics.filter((_,ti)=>!existingKeys.has(`${clSubjIdx}-${clChapIdx}-${ti}`)).length} available sections will be added
                   </div>
                 </div>
-              )} style={{ ...btn, padding:"6px 12px", textAlign:"left", background:sel?`${c}22`:already?"var(--bg-inner)":"var(--bg-card)", border:`1px solid ${sel?c:already?"#1e293b55":"var(--border)"}`, color:sel?c:already?"var(--text-ghost)":"var(--text-dim)", fontSize:12, fontFamily:"'DM Serif Display', serif", display:"flex", alignItems:"center", gap:8, cursor:already?"default":"pointer" }}>
-  
-                      );
-                    })}
-                  </div>
-                </div>
-              )}
+              
               
               <div style={{ display:"flex", justifyContent:"space-between", gap:8 }}>
                 <button onClick={()=>setStep(2)} style={{ ...btn, background:"none", border:"1px solid var(--border)", color:"var(--text-faint)" }}>← Back</button>
