@@ -10,11 +10,61 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
-    body { background: #040c17; color: #e2e8f0; font-family: 'DM Serif Display', serif; }
+    body { font-family: 'DM Serif Display', serif; transition: background 0.3s, color 0.3s; }
+
+    /* ── DARK THEME (default) ── */
+    body.dark {
+      --bg-page:       #040c17;
+      --bg-header:     #060f1d;
+      --bg-card:       #070f1c;
+      --bg-inner:      #0a1020;
+      --bg-deep:       #0c1428;
+      --bg-deeper:     #07101e;
+      --bg-input:      #0d1a2d;
+      --border:        #1e293b;
+      --border-mid:    #0f2040;
+      --border-accent: #1e3a5f;
+      --text-primary:  #f1f5f9;
+      --text-secondary:#e2e8f0;
+      --text-muted:    #94a3b8;
+      --text-dim:      #64748b;
+      --text-faint:    #475569;
+      --text-ghost:    #334155;
+      --text-phantom:  #1e3a5f;
+      --accent:        #3b82f6;
+      --scrollbar-track: #0a1020;
+      --scrollbar-thumb: #1e3a5f;
+    }
+
+    /* ── LIGHT THEME ── */
+    body.light {
+      --bg-page:       #f0f4ff;
+      --bg-header:     #ffffff;
+      --bg-card:       #ffffff;
+      --bg-inner:      #f8faff;
+      --bg-deep:       #eef2ff;
+      --bg-deeper:     #f3f6ff;
+      --bg-input:      #ffffff;
+      --border:        #c7d2fe;
+      --border-mid:    #dde5ff;
+      --border-accent: #a5b4fc;
+      --text-primary:  #1e1b4b;
+      --text-secondary:#1e1b4b;
+      --text-muted:    #3730a3;
+      --text-dim:      #4338ca;
+      --text-faint:    #6366f1;
+      --text-ghost:    #818cf8;
+      --text-phantom:  #a5b4fc;
+      --accent:        #4f46e5;
+      --scrollbar-track: #e0e7ff;
+      --scrollbar-thumb: #818cf8;
+    }
+
+    body { background: var(--bg-page); color: var(--text-secondary); }
     @import url('https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Mono:wght@400;500&display=swap');
     ::-webkit-scrollbar { width: 4px; height: 4px; }
-    ::-webkit-scrollbar-track { background: #0a1020; }
-    ::-webkit-scrollbar-thumb { background: #1e3a5f; border-radius: 4px; }
+    ::-webkit-scrollbar-track { background: var(--scrollbar-track); }
+    ::-webkit-scrollbar-thumb { background: var(--scrollbar-thumb); border-radius: 4px; }
     input, textarea { outline: none; }
     textarea { resize: vertical; }
     button { transition: opacity 0.15s; cursor: pointer; }
@@ -23,7 +73,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com"/>
   <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet"/>
 </head>
-<body>
+<body class="dark">
   <div id="root"></div>
 
   <script type="text/babel">
@@ -200,10 +250,10 @@
     function MiniCheck({ checked, onChange, color, label }) {
       return (
         <button onClick={onChange} style={{ display:"flex", alignItems:"center", gap:3, background:"none", border:"none", padding:"1px 4px", borderRadius:4 }}>
-          <span style={{ width:11, height:11, borderRadius:2, flexShrink:0, border:`1.5px solid ${checked?color:"#334155"}`, background:checked?color:"transparent", display:"flex", alignItems:"center", justifyContent:"center", transition:"all 0.12s" }}>
+          <span style={{ width:11, height:11, borderRadius:2, flexShrink:0, border:`1.5px solid ${checked?color:"var(--text-ghost)"}`, background:checked?color:"transparent", display:"flex", alignItems:"center", justifyContent:"center", transition:"all 0.12s" }}>
             {checked&&<svg width="7" height="7" viewBox="0 0 7 7" fill="none"><path d="M1 3.5L2.8 5.2L6 1.5" stroke="#0f172a" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round"/></svg>}
           </span>
-          <span style={{ fontSize:9, fontFamily:"'DM Mono', monospace", color:checked?color:"#475569" }}>{label}</span>
+          <span style={{ fontSize:9, fontFamily:"'DM Mono', monospace", color:checked?color:"var(--text-faint)" }}>{label}</span>
         </button>
       );
     }
@@ -211,8 +261,8 @@
     function CheckBadge({ checked, onChange, type }) {
       const { label, color } = PLANNER_CHECKS[type];
       return (
-        <button onClick={onChange} style={{ display:"flex", alignItems:"center", gap:4, padding:"3px 8px", borderRadius:20, border:`1.5px solid ${checked?color:"#334155"}`, background:checked?`${color}22`:"transparent", fontSize:11, fontFamily:"'DM Mono', monospace", color:checked?color:"#64748b", transition:"all 0.15s", whiteSpace:"nowrap" }}>
-          <span style={{ width:13, height:13, borderRadius:"50%", border:`1.5px solid ${checked?color:"#475569"}`, background:checked?color:"transparent", display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0 }}>
+        <button onClick={onChange} style={{ display:"flex", alignItems:"center", gap:4, padding:"3px 8px", borderRadius:20, border:`1.5px solid ${checked?color:"var(--text-ghost)"}`, background:checked?`${color}22`:"transparent", fontSize:11, fontFamily:"'DM Mono', monospace", color:checked?color:"var(--text-dim)", transition:"all 0.15s", whiteSpace:"nowrap" }}>
+          <span style={{ width:13, height:13, borderRadius:"50%", border:`1.5px solid ${checked?color:"var(--text-faint)"}`, background:checked?color:"transparent", display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0 }}>
             {checked&&<svg width="8" height="8" viewBox="0 0 8 8" fill="none"><path d="M1.5 4L3.2 5.7L6.5 2.3" stroke="#0f172a" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"/></svg>}
           </span>
           {label}
@@ -223,8 +273,8 @@
     function CheckBox({ checked, onChange, type }) {
       const { label, color } = CHECK_META[type];
       return (
-        <button onClick={onChange} style={{ display:"flex", alignItems:"center", gap:4, padding:"3px 8px", borderRadius:20, border:`1.5px solid ${checked?color:"#334155"}`, background:checked?`${color}22`:"transparent", fontSize:11, fontFamily:"'DM Mono', monospace", color:checked?color:"#64748b", transition:"all 0.15s", whiteSpace:"nowrap" }}>
-          <span style={{ width:13, height:13, borderRadius:"50%", border:`1.5px solid ${checked?color:"#475569"}`, background:checked?color:"transparent", display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0 }}>
+        <button onClick={onChange} style={{ display:"flex", alignItems:"center", gap:4, padding:"3px 8px", borderRadius:20, border:`1.5px solid ${checked?color:"var(--text-ghost)"}`, background:checked?`${color}22`:"transparent", fontSize:11, fontFamily:"'DM Mono', monospace", color:checked?color:"var(--text-dim)", transition:"all 0.15s", whiteSpace:"nowrap" }}>
+          <span style={{ width:13, height:13, borderRadius:"50%", border:`1.5px solid ${checked?color:"var(--text-faint)"}`, background:checked?color:"transparent", display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0 }}>
             {checked&&<svg width="8" height="8" viewBox="0 0 8 8" fill="none"><path d="M1.5 4L3.2 5.7L6.5 2.3" stroke="#0f172a" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"/></svg>}
           </span>
           {label}
@@ -238,23 +288,23 @@
       useEffect(()=>{ if(autoFocus&&ref.current) ref.current.focus(); },[autoFocus]);
       return (
         <div style={{ display:"flex", alignItems:"center", gap:5, marginBottom:4 }}>
-          <span style={{ color:"#64748b", fontSize:12, fontFamily:"'DM Mono', monospace", flexShrink:0 }}>↳</span>
+          <span style={{ color:"var(--text-dim)", fontSize:12, fontFamily:"'DM Mono', monospace", flexShrink:0 }}>↳</span>
           <input ref={ref} value={sh.title} onChange={e=>onChange({...sh,title:e.target.value})}
             onKeyDown={e=>{ if(e.key==="Enter"){e.preventDefault();onEnter();} }}
             placeholder="Subheading..."
-            style={{ flex:1, background:"transparent", border:"none", borderBottom:"1px dashed #1e293b", color:"#94a3b8", fontSize:12, fontFamily:"'DM Serif Display', serif", fontStyle:"italic", padding:"2px 0" }}
+            style={{ flex:1, background:"transparent", border:"none", borderBottom:"1px dashed #1e293b", color:"var(--text-muted)", fontSize:12, fontFamily:"'DM Serif Display', serif", fontStyle:"italic", padding:"2px 0" }}
           />
           <MiniCheck checked={sh.checks?.textbook||false} onChange={()=>onChange({...sh,checks:{...sh.checks,textbook:!sh.checks?.textbook}})} color="#4ade80" label="TB"/>
           <MiniCheck checked={sh.checks?.claude||false}   onChange={()=>onChange({...sh,checks:{...sh.checks,claude:!sh.checks?.claude}})}   color="#60a5fa" label="CL"/>
-          <button onClick={onDelete} style={{ background:"none", border:"none", color:"#334155", fontSize:14, lineHeight:1, padding:"0 2px", flexShrink:0 }}>×</button>
+          <button onClick={onDelete} style={{ background:"none", border:"none", color:"var(--text-ghost)", fontSize:14, lineHeight:1, padding:"0 2px", flexShrink:0 }}>×</button>
         </div>
       );
     }
     function SubheadingView({ sh, onChange }) {
       return (
         <div style={{ display:"flex", alignItems:"center", gap:5, marginBottom:4 }}>
-          <span style={{ color:"#64748b", fontSize:12, fontFamily:"'DM Mono', monospace" }}>↳</span>
-          <span style={{ flex:1, color:"#64748b", fontSize:12, fontFamily:"'DM Serif Display', serif", fontStyle:"italic" }}>{sh.title}</span>
+          <span style={{ color:"var(--text-dim)", fontSize:12, fontFamily:"'DM Mono', monospace" }}>↳</span>
+          <span style={{ flex:1, color:"var(--text-dim)", fontSize:12, fontFamily:"'DM Serif Display', serif", fontStyle:"italic" }}>{sh.title}</span>
           <MiniCheck checked={sh.checks?.textbook||false} onChange={()=>onChange({...sh,checks:{...sh.checks,textbook:!sh.checks?.textbook}})} color="#4ade80" label="TB"/>
           <MiniCheck checked={sh.checks?.claude||false}   onChange={()=>onChange({...sh,checks:{...sh.checks,claude:!sh.checks?.claude}})}   color="#60a5fa" label="CL"/>
         </div>
@@ -273,12 +323,12 @@
       function updateSh(i,u){ const a=[...sub.subheadings];a[i]=u;onChange({...sub,subheadings:a}); }
       function deleteSh(i){ onChange({...sub,subheadings:sub.subheadings.filter((_,j)=>j!==i)}); }
       return (
-        <div style={{ background:"#0c1428", border:`1px solid ${sectionDone?"#1e3a2a":"#1e2d45"}`, borderRadius:8, padding:"10px 12px", marginBottom:6, transition:"border-color 0.2s" }}>
+        <div style={{ background:"var(--bg-deep)", border:`1px solid ${sectionDone?"#1e3a2a":"var(--border)"}`, borderRadius:8, padding:"10px 12px", marginBottom:6, transition:"border-color 0.2s" }}>
           <div style={{ display:"flex", alignItems:"center", gap:6, marginBottom:8 }}>
             <span style={{ color:"#3b82f6", fontSize:11, fontFamily:"'DM Mono', monospace", flexShrink:0 }}>§</span>
-            <span style={{ flex:1, color:sectionDone?"#475569":"#cbd5e1", fontSize:13, fontFamily:"'DM Serif Display', serif", textDecoration:sectionDone?"line-through":"none" }}>{displayName}</span>
+            <span style={{ flex:1, color:sectionDone?"var(--text-faint)":"#cbd5e1", fontSize:13, fontFamily:"'DM Serif Display', serif", textDecoration:sectionDone?"line-through":"none" }}>{displayName}</span>
             {sectionDone&&<span style={{ fontSize:10, flexShrink:0 }}>✓</span>}
-            <button onClick={onDelete} style={{ background:"none", border:"none", color:"#334155", fontSize:16, lineHeight:1, flexShrink:0 }}>×</button>
+            <button onClick={onDelete} style={{ background:"none", border:"none", color:"var(--text-ghost)", fontSize:16, lineHeight:1, flexShrink:0 }}>×</button>
           </div>
           <div style={{ display:"flex", gap:6, flexWrap:"wrap", marginBottom:sub.subheadings.length?8:0 }}>
             <CheckBadge type="textbook" checked={sub.checks.textbook} onChange={()=>toggleCheck("textbook")}/>
@@ -289,7 +339,7 @@
               {sub.subheadings.map((sh,i)=><SubheadingEdit key={sh.id} sh={sh} onChange={u=>updateSh(i,u)} onDelete={()=>deleteSh(i)} onEnter={()=>addSubheadingAt(i)} autoFocus={focusIdx===i}/>)}
             </div>
           )}
-          <button onClick={addSubheading} style={{ marginTop:6, background:"none", border:"none", color:"#334155", fontSize:11, fontFamily:"'DM Mono', monospace", padding:0 }}>+ subheading</button>
+          <button onClick={addSubheading} style={{ marginTop:6, background:"none", border:"none", color:"var(--text-ghost)", fontSize:11, fontFamily:"'DM Mono', monospace", padding:0 }}>+ subheading</button>
         </div>
       );
     }
@@ -299,10 +349,10 @@
       function toggleCheck(k){ onChange({...sub,checks:{...sub.checks,[k]:!sub.checks[k]}}); }
       function updateSh(i,u){ const a=[...sub.subheadings];a[i]=u;onChange({...sub,subheadings:a}); }
       return (
-        <div style={{ background:"#0c1428", border:`1px solid ${sectionDone?"#1e3a2a":"#1e2d45"}`, borderRadius:8, padding:"10px 12px", marginBottom:6, transition:"border-color 0.2s" }}>
+        <div style={{ background:"var(--bg-deep)", border:`1px solid ${sectionDone?"#1e3a2a":"var(--border)"}`, borderRadius:8, padding:"10px 12px", marginBottom:6, transition:"border-color 0.2s" }}>
           <div style={{ display:"flex", alignItems:"center", gap:6, marginBottom:7 }}>
             <span style={{ color:"#3b82f6", fontSize:11, fontFamily:"'DM Mono', monospace" }}>§</span>
-            <span style={{ color:sectionDone?"#475569":"#cbd5e1", fontSize:13, fontFamily:"'DM Serif Display', serif", textDecoration:sectionDone?"line-through":"none", flex:1 }}>{displayName}</span>
+            <span style={{ color:sectionDone?"var(--text-faint)":"#cbd5e1", fontSize:13, fontFamily:"'DM Serif Display', serif", textDecoration:sectionDone?"line-through":"none", flex:1 }}>{displayName}</span>
             {sectionDone&&<span style={{ fontSize:11, color:"#4ade80" }}>✓</span>}
           </div>
           <div style={{ display:"flex", gap:6, flexWrap:"wrap", marginBottom:sub.subheadings.length?6:0 }}>
@@ -346,32 +396,32 @@
       function toggleMin(){ onChange({...sec,minimized:!sec.minimized}); }
 
       const VideoCheckbox = ({inEdit}) => (
-        <button onClick={()=>onChange({...sec,videosWatched:!sec.videosWatched})} style={{ display:"flex", alignItems:"center", gap:5, background:"none", border:`1px solid ${sec.videosWatched?"#a78bfa":"#1e3a5f"}`, borderRadius:6, padding:inEdit?"3px 8px":"2px 7px", flexShrink:0 }}>
-          <span style={{ width:11, height:11, borderRadius:2, border:`1.5px solid ${sec.videosWatched?"#a78bfa":"#334155"}`, background:sec.videosWatched?"#a78bfa22":"transparent", display:"flex", alignItems:"center", justifyContent:"center" }}>
+        <button onClick={()=>onChange({...sec,videosWatched:!sec.videosWatched})} style={{ display:"flex", alignItems:"center", gap:5, background:"none", border:`1px solid ${sec.videosWatched?"#a78bfa":"var(--border-accent)"}`, borderRadius:6, padding:inEdit?"3px 8px":"2px 7px", flexShrink:0 }}>
+          <span style={{ width:11, height:11, borderRadius:2, border:`1.5px solid ${sec.videosWatched?"#a78bfa":"var(--text-ghost)"}`, background:sec.videosWatched?"#a78bfa22":"transparent", display:"flex", alignItems:"center", justifyContent:"center" }}>
             {sec.videosWatched&&<svg width="7" height="7" viewBox="0 0 7 7" fill="none"><path d="M1 3.5L2.8 5.2L6 1.5" stroke="#a78bfa" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round"/></svg>}
           </span>
-          <span style={{ fontSize:9, fontFamily:"'DM Mono', monospace", color:sec.videosWatched?"#a78bfa":"#334155" }}>Videos</span>
+          <span style={{ fontSize:9, fontFamily:"'DM Mono', monospace", color:sec.videosWatched?"#a78bfa":"var(--text-ghost)" }}>Videos</span>
         </button>
       );
 
       if (!editing) return (
-        <div style={{ background:"#0a1020", border:`1px solid ${allSubsDone?"#1e3a2a":color+"44"}`, borderLeft:`3px solid ${color}`, borderRadius:10, marginBottom:10, overflow:"hidden", transition:"border-color 0.3s" }}>
-          <div style={{ display:"flex", alignItems:"center", gap:8, padding:"10px 14px", background:`${color}0d` }}>
-            <button onClick={toggleMin} style={{ background:"none", border:"none", color:"#475569", fontSize:14, lineHeight:1, padding:"0 2px", flexShrink:0 }}>{sec.minimized?"▸":"▾"}</button>
+        <div style={{ background:"var(--bg-inner)", border:`1px solid ${allSubsDone?"#1e3a2a":color+"44"}`, borderLeft:`3px solid ${color}`, borderRadius:10, marginBottom:10, overflow:"hidden", transition:"border-color 0.3s" }}>
+          <div style={{ display:"flex", alignItems:"center", gap:8, padding:"10px 14px", background:`${color}11` }}>
+            <button onClick={toggleMin} style={{ background:"none", border:"none", color:"var(--text-faint)", fontSize:14, lineHeight:1, padding:"0 2px", flexShrink:0 }}>{sec.minimized?"▸":"▾"}</button>
             <VideoCheckbox/>
-            <span style={{ flex:1, fontFamily:"'DM Serif Display', serif", fontSize:15, fontWeight:700, color:allSubsDone?"#4ade80":"#f1f5f9" }}>
-              {fullTitle||<em style={{color:"#334155",fontWeight:400}}>Untitled</em>}
+            <span style={{ flex:1, fontFamily:"'DM Serif Display', serif", fontSize:15, fontWeight:700, color:allSubsDone?"#4ade80":"var(--text-primary)" }}>
+              {fullTitle||<em style={{color:"var(--text-ghost)",fontWeight:400}}>Untitled</em>}
               {allSubsDone&&<span style={{ fontSize:11, marginLeft:8, color:"#4ade80" }}>✓ Complete</span>}
             </span>
             <div style={{ display:"flex", gap:6, alignItems:"center", flexShrink:0 }}>
-              <button onClick={onMoveRequest} style={{ background:"none", border:"1px solid #1e3a5f", borderRadius:6, color:"#475569", fontSize:10, fontFamily:"'DM Mono', monospace", padding:"2px 7px" }}>move →</button>
+              <button onClick={onMoveRequest} style={{ background:"none", border:"1px solid var(--border-accent)", borderRadius:6, color:"var(--text-faint)", fontSize:10, fontFamily:"'DM Mono', monospace", padding:"2px 7px" }}>move →</button>
               <button onClick={()=>setEditing(true)} style={{ background:"none", border:`1px solid ${color}55`, borderRadius:6, color, fontSize:10, fontFamily:"'DM Mono', monospace", padding:"2px 7px" }}>edit</button>
-              <button onClick={onDelete} style={{ background:"none", border:"none", color:"#334155", fontSize:18, lineHeight:1 }}>×</button>
+              <button onClick={onDelete} style={{ background:"none", border:"none", color:"var(--text-ghost)", fontSize:18, lineHeight:1 }}>×</button>
             </div>
           </div>
           {!sec.minimized&&(
             <div style={{ padding:"10px 14px 12px" }}>
-              {groups.length===0 ? <div style={{ color:"#334155", fontSize:12, fontFamily:"'DM Mono', monospace", fontStyle:"italic" }}>No sections.</div>
+              {groups.length===0 ? <div style={{ color:"var(--text-ghost)", fontSize:12, fontFamily:"'DM Mono', monospace", fontStyle:"italic" }}>No sections.</div>
                 : groups.map(g=>(
                   <div key={`${g.si}-${g.ci}`} style={{ marginBottom:10 }}>
                     <div style={{ display:"flex", alignItems:"center", gap:6, marginBottom:6, paddingBottom:4, borderBottom:`1px solid ${g.color}22` }}>
@@ -383,9 +433,9 @@
                 ))
               }
               {(sec.notes||"").length>0&&(
-                <div style={{ marginTop:8, padding:"8px 10px", background:"#070f1c", borderRadius:6, border:"1px solid #0f2040" }}>
-                  <div style={{ fontFamily:"'DM Mono', monospace", fontSize:9, color:"#334155", marginBottom:4, letterSpacing:"0.1em" }}>NOTES</div>
-                  <div style={{ fontFamily:"'DM Serif Display', serif", fontSize:12, color:"#64748b", lineHeight:1.6, whiteSpace:"pre-wrap" }}>{sec.notes}</div>
+                <div style={{ marginTop:8, padding:"8px 10px", background:"var(--bg-card)", borderRadius:6, border:"1px solid var(--border-mid)" }}>
+                  <div style={{ fontFamily:"'DM Mono', monospace", fontSize:9, color:"var(--text-ghost)", marginBottom:4, letterSpacing:"0.1em" }}>NOTES</div>
+                  <div style={{ fontFamily:"'DM Serif Display', serif", fontSize:12, color:"var(--text-dim)", lineHeight:1.6, whiteSpace:"pre-wrap" }}>{sec.notes}</div>
                 </div>
               )}
             </div>
@@ -394,15 +444,15 @@
       );
 
       return (
-        <div style={{ background:"#0a1020", border:`1px solid ${color}66`, borderLeft:`3px solid ${color}`, borderRadius:10, padding:"12px 14px", marginBottom:10 }}>
+        <div style={{ background:"var(--bg-inner)", border:`1px solid ${color}66`, borderLeft:`3px solid ${color}`, borderRadius:10, padding:"12px 14px", marginBottom:10 }}>
           <div style={{ display:"flex", alignItems:"center", gap:8, marginBottom:12 }}>
             <VideoCheckbox inEdit/>
             <span style={{ fontFamily:"'DM Mono', monospace", fontSize:11, color, background:`${color}22`, border:`1px solid ${color}44`, borderRadius:6, padding:"2px 8px", flexShrink:0 }}>{sec.subject}</span>
-            {sec.topic&&<span style={{ fontFamily:"'DM Serif Display', serif", fontSize:14, fontWeight:700, color:"#e2e8f0" }}>{sec.topic}</span>}
+            {sec.topic&&<span style={{ fontFamily:"'DM Serif Display', serif", fontSize:14, fontWeight:700, color:"var(--text-secondary)" }}>{sec.topic}</span>}
             <div style={{ flex:1 }}/>
-            <button onClick={onDelete} style={{ background:"none", border:"none", color:"#475569", fontSize:18, lineHeight:1, flexShrink:0 }}>×</button>
+            <button onClick={onDelete} style={{ background:"none", border:"none", color:"var(--text-faint)", fontSize:18, lineHeight:1, flexShrink:0 }}>×</button>
           </div>
-          {groups.length===0 ? <div style={{ color:"#334155", fontSize:12, fontFamily:"'DM Mono', monospace", fontStyle:"italic", marginBottom:8 }}>No sections linked.</div>
+          {groups.length===0 ? <div style={{ color:"var(--text-ghost)", fontSize:12, fontFamily:"'DM Mono', monospace", fontStyle:"italic", marginBottom:8 }}>No sections linked.</div>
             : groups.map(g=>(
               <div key={`${g.si}-${g.ci}`} style={{ marginBottom:10 }}>
                 <div style={{ display:"flex", alignItems:"center", gap:6, marginBottom:6, paddingBottom:4, borderBottom:`1px solid ${g.color}22` }}>
@@ -414,9 +464,9 @@
             ))
           }
           <div style={{ marginTop:8, marginBottom:10 }}>
-            <div style={{ fontFamily:"'DM Mono', monospace", fontSize:9, color:"#334155", marginBottom:4, letterSpacing:"0.1em" }}>NOTES</div>
+            <div style={{ fontFamily:"'DM Mono', monospace", fontSize:9, color:"var(--text-ghost)", marginBottom:4, letterSpacing:"0.1em" }}>NOTES</div>
             <textarea value={sec.notes||""} onChange={e=>onChange({...sec,notes:e.target.value})} placeholder="Free-write notes for this topic block..." rows={3}
-              style={{ width:"100%", background:"#070f1c", border:"1px solid #0f2040", borderRadius:6, color:"#64748b", fontSize:12, fontFamily:"'DM Serif Display', serif", lineHeight:1.6, padding:"8px 10px" }}
+              style={{ width:"100%", background:"var(--bg-card)", border:"1px solid var(--border-mid)", borderRadius:6, color:"var(--text-dim)", fontSize:12, fontFamily:"'DM Serif Display', serif", lineHeight:1.6, padding:"8px 10px" }}
             />
           </div>
           <div style={{ display:"flex", justifyContent:"flex-end" }}>
@@ -430,12 +480,12 @@
     function MoveModal({ currentDay, onMove, onClose }) {
       return (
         <div style={{ position:"fixed", inset:0, background:"#000b", zIndex:200, display:"flex", alignItems:"center", justifyContent:"center" }} onClick={onClose}>
-          <div style={{ background:"#0d1a2d", border:"1px solid #1e3a5f", borderRadius:14, padding:"20px 24px", minWidth:220 }} onClick={e=>e.stopPropagation()}>
+          <div style={{ background:"var(--bg-input)", border:"1px solid var(--border-accent)", borderRadius:14, padding:"20px 24px", minWidth:220 }} onClick={e=>e.stopPropagation()}>
             <div style={{ fontFamily:"'DM Mono', monospace", fontSize:10, letterSpacing:"0.15em", color:"#3b82f6", marginBottom:14 }}>MOVE TO DAY</div>
             {DAYS.filter(d=>d!==currentDay).map(d=>(
-              <button key={d} onClick={()=>onMove(d)} style={{ display:"block", width:"100%", textAlign:"left", background:"none", border:"none", borderBottom:"1px solid #1e293b", color:"#94a3b8", fontSize:13, fontFamily:"'DM Serif Display', serif", padding:"8px 4px" }}>{d}</button>
+              <button key={d} onClick={()=>onMove(d)} style={{ display:"block", width:"100%", textAlign:"left", background:"none", border:"none", borderBottom:"1px solid var(--border)", color:"var(--text-muted)", fontSize:13, fontFamily:"'DM Serif Display', serif", padding:"8px 4px" }}>{d}</button>
             ))}
-            <button onClick={onClose} style={{ marginTop:12, background:"none", border:"none", color:"#475569", fontSize:11, fontFamily:"'DM Mono', monospace", padding:0 }}>cancel</button>
+            <button onClick={onClose} style={{ marginTop:12, background:"none", border:"none", color:"var(--text-faint)", fontSize:11, fontFamily:"'DM Mono', monospace", padding:0 }}>cancel</button>
           </div>
         </div>
       );
@@ -459,68 +509,68 @@
       const btn = { borderRadius:8, fontFamily:"'DM Mono', monospace", fontSize:12, padding:"6px 16px", transition:"all 0.15s" };
       return (
         <div style={{ position:"fixed", inset:0, background:"#000c", zIndex:300, display:"flex", alignItems:"center", justifyContent:"center", padding:16 }} onClick={onClose}>
-          <div style={{ background:"#0d1a2d", border:"1px solid #1e3a5f", borderRadius:16, padding:"24px", width:"100%", maxWidth:520, maxHeight:"88vh", overflowY:"auto" }} onClick={e=>e.stopPropagation()}>
+          <div style={{ background:"var(--bg-input)", border:"1px solid var(--border-accent)", borderRadius:16, padding:"24px", width:"100%", maxWidth:520, maxHeight:"88vh", overflowY:"auto" }} onClick={e=>e.stopPropagation()}>
             <div style={{ display:"flex", gap:6, marginBottom:20, alignItems:"center" }}>
-              {[1,2,3].map(n=><div key={n} style={{ width:8, height:8, borderRadius:"50%", background:step>=n?"#3b82f6":"#1e3a5f" }}/>)}
-              <span style={{ fontFamily:"'DM Mono', monospace", fontSize:10, color:"#475569", marginLeft:4 }}>STEP {step} OF 3</span>
+              {[1,2,3].map(n=><div key={n} style={{ width:8, height:8, borderRadius:"50%", background:step>=n?"#3b82f6":"var(--border-accent)" }}/>)}
+              <span style={{ fontFamily:"'DM Mono', monospace", fontSize:10, color:"var(--text-faint)", marginLeft:4 }}>STEP {step} OF 3</span>
             </div>
             {step===1&&(<>
               <div style={{ fontFamily:"'DM Mono', monospace", fontSize:10, letterSpacing:"0.15em", color:"#3b82f6", marginBottom:12 }}>CHOOSE SUBJECT</div>
               <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:8 }}>
                 {PLANNER_SUBJECTS.map(s=>(
-                  <button key={s.label} onClick={()=>setPickedSubject(s)} style={{ ...btn, padding:"10px 12px", textAlign:"left", background:pickedSubject?.label===s.label?`${s.color}22`:"#070f1c", border:`1px solid ${pickedSubject?.label===s.label?s.color:"#1e293b"}`, color:pickedSubject?.label===s.label?s.color:"#64748b", display:"flex", alignItems:"center", gap:8 }}>
+                  <button key={s.label} onClick={()=>setPickedSubject(s)} style={{ ...btn, padding:"10px 12px", textAlign:"left", background:pickedSubject?.label===s.label?`${s.color}22`:"var(--bg-card)", border:`1px solid ${pickedSubject?.label===s.label?s.color:"var(--border)"}`, color:pickedSubject?.label===s.label?s.color:"var(--text-dim)", display:"flex", alignItems:"center", gap:8 }}>
                     <span style={{ width:8, height:8, borderRadius:"50%", background:s.color, flexShrink:0 }}/><span>{s.label}</span>
                   </button>
                 ))}
               </div>
               <div style={{ display:"flex", justifyContent:"flex-end", marginTop:20, gap:8 }}>
-                <button onClick={onClose} style={{ ...btn, background:"none", border:"1px solid #1e293b", color:"#475569" }}>Cancel</button>
-                <button onClick={()=>setStep(2)} disabled={!pickedSubject} style={{ ...btn, background:pickedSubject?`${pickedSubject.color}22`:"#0d1a2d", border:`1px solid ${pickedSubject?.color||"#1e293b"}`, color:pickedSubject?.color||"#475569", opacity:pickedSubject?1:0.4 }}>Next →</button>
+                <button onClick={onClose} style={{ ...btn, background:"none", border:"1px solid var(--border)", color:"var(--text-faint)" }}>Cancel</button>
+                <button onClick={()=>setStep(2)} disabled={!pickedSubject} style={{ ...btn, background:pickedSubject?`${pickedSubject.color}22`:"var(--bg-input)", border:`1px solid ${pickedSubject?.color||"var(--border)"}`, color:pickedSubject?.color||"var(--text-faint)", opacity:pickedSubject?1:0.4 }}>Next →</button>
               </div>
             </>)}
             {step===2&&(<>
               <div style={{ fontFamily:"'DM Mono', monospace", fontSize:10, letterSpacing:"0.15em", color:"#3b82f6", marginBottom:12 }}>TOPIC NAME</div>
               <div style={{ display:"flex", alignItems:"center", gap:8, marginBottom:8 }}>
-                <span style={{ fontFamily:"'DM Serif Display', serif", fontWeight:700, color:pickedSubject.color, fontSize:15 }}>{pickedSubject.label}</span><span style={{ color:"#475569" }}>:</span>
+                <span style={{ fontFamily:"'DM Serif Display', serif", fontWeight:700, color:pickedSubject.color, fontSize:15 }}>{pickedSubject.label}</span><span style={{ color:"var(--text-faint)" }}>:</span>
               </div>
               <input ref={topicRef} value={topicName} onChange={e=>setTopicName(e.target.value)} onKeyDown={e=>{ if(e.key==="Enter"&&topicName.trim()) setStep(3); }} placeholder="e.g. Quantum Numbers, Cell Signaling..."
-                style={{ width:"100%", background:"#070f1c", border:`1px solid ${pickedSubject.color}55`, borderRadius:8, color:"#e2e8f0", fontSize:15, fontFamily:"'DM Serif Display', serif", fontWeight:700, padding:"10px 14px" }}
+                style={{ width:"100%", background:"var(--bg-card)", border:`1px solid ${pickedSubject.color}55`, borderRadius:8, color:"var(--text-secondary)", fontSize:15, fontFamily:"'DM Serif Display', serif", fontWeight:700, padding:"10px 14px" }}
               />
               <div style={{ display:"flex", justifyContent:"space-between", marginTop:20, gap:8 }}>
-                <button onClick={()=>setStep(1)} style={{ ...btn, background:"none", border:"1px solid #1e293b", color:"#475569" }}>← Back</button>
-                <button onClick={()=>setStep(3)} disabled={!topicName.trim()} style={{ ...btn, background:topicName.trim()?`${pickedSubject.color}22`:"#0d1a2d", border:`1px solid ${topicName.trim()?pickedSubject.color:"#1e293b"}`, color:topicName.trim()?pickedSubject.color:"#475569", opacity:topicName.trim()?1:0.4 }}>Next →</button>
+                <button onClick={()=>setStep(1)} style={{ ...btn, background:"none", border:"1px solid var(--border)", color:"var(--text-faint)" }}>← Back</button>
+                <button onClick={()=>setStep(3)} disabled={!topicName.trim()} style={{ ...btn, background:topicName.trim()?`${pickedSubject.color}22`:"var(--bg-input)", border:`1px solid ${topicName.trim()?pickedSubject.color:"var(--border)"}`, color:topicName.trim()?pickedSubject.color:"var(--text-faint)", opacity:topicName.trim()?1:0.4 }}>Next →</button>
               </div>
             </>)}
             {step===3&&(<>
               <div style={{ fontFamily:"'DM Mono', monospace", fontSize:10, letterSpacing:"0.15em", color:"#3b82f6", marginBottom:12 }}>ADD SECTIONS FROM CHECKLIST</div>
               <div style={{ display:"flex", gap:6, flexWrap:"wrap", marginBottom:12 }}>
                 {CHECKLIST_DATA.map((s,si)=>(
-                  <button key={si} onClick={()=>{ setClSubjIdx(si); setClChapIdx(null); }} style={{ ...btn, padding:"4px 10px", background:clSubjIdx===si?`${s.color}22`:"#070f1c", border:`1px solid ${clSubjIdx===si?s.color:"#1e293b"}`, color:clSubjIdx===si?s.color:"#475569", fontSize:11 }}>{s.subject}</button>
+                  <button key={si} onClick={()=>{ setClSubjIdx(si); setClChapIdx(null); }} style={{ ...btn, padding:"4px 10px", background:clSubjIdx===si?`${s.color}22`:"var(--bg-card)", border:`1px solid ${clSubjIdx===si?s.color:"var(--border)"}`, color:clSubjIdx===si?s.color:"var(--text-faint)", fontSize:11 }}>{s.subject}</button>
                 ))}
               </div>
               {clSubjIdx!==null&&(
                 <div style={{ marginBottom:12 }}>
-                  <div style={{ fontFamily:"'DM Mono', monospace", fontSize:9, letterSpacing:"0.1em", color:"#334155", marginBottom:6 }}>CHAPTER</div>
+                  <div style={{ fontFamily:"'DM Mono', monospace", fontSize:9, letterSpacing:"0.1em", color:"var(--text-ghost)", marginBottom:6 }}>CHAPTER</div>
                   <div style={{ display:"flex", flexDirection:"column", gap:4 }}>
                     {CHECKLIST_DATA[clSubjIdx].chapters.map((ch,ci)=>(
-                      <button key={ci} onClick={()=>setClChapIdx(ci)} style={{ ...btn, padding:"6px 10px", textAlign:"left", background:clChapIdx===ci?`${CHECKLIST_DATA[clSubjIdx].color}18`:"#070f1c", border:`1px solid ${clChapIdx===ci?CHECKLIST_DATA[clSubjIdx].color+"55":"#1e293b"}`, color:clChapIdx===ci?"#e2e8f0":"#64748b", fontSize:12, fontFamily:"'DM Serif Display', serif" }}>{ch.title}</button>
+                      <button key={ci} onClick={()=>setClChapIdx(ci)} style={{ ...btn, padding:"6px 10px", textAlign:"left", background:clChapIdx===ci?`${CHECKLIST_DATA[clSubjIdx].color}18`:"var(--bg-card)", border:`1px solid ${clChapIdx===ci?CHECKLIST_DATA[clSubjIdx].color+"55":"var(--border)"}`, color:clChapIdx===ci?"var(--text-secondary)":"var(--text-dim)", fontSize:12, fontFamily:"'DM Serif Display', serif" }}>{ch.title}</button>
                     ))}
                   </div>
                 </div>
               )}
               {clSubjIdx!==null&&clChapIdx!==null&&(
                 <div style={{ marginBottom:16 }}>
-                  <div style={{ fontFamily:"'DM Mono', monospace", fontSize:9, letterSpacing:"0.1em", color:"#334155", marginBottom:6 }}>SUBTOPICS — click to select</div>
+                  <div style={{ fontFamily:"'DM Mono', monospace", fontSize:9, letterSpacing:"0.1em", color:"var(--text-ghost)", marginBottom:6 }}>SUBTOPICS — click to select</div>
                   <div style={{ display:"flex", flexDirection:"column", gap:3 }}>
                     {CHECKLIST_DATA[clSubjIdx].chapters[clChapIdx].topics.map((t,ti)=>{
                       const k=`${clSubjIdx}-${clChapIdx}-${ti}`; const sel=selectedKeys.has(k); const already=existingKeys.has(k); const c=CHECKLIST_DATA[clSubjIdx].color;
                       return (
-                        <button key={ti} onClick={()=>!already&&toggleKey(k)} style={{ ...btn, padding:"6px 12px", textAlign:"left", background:sel?`${c}22`:already?"#0a1020":"#070f1c", border:`1px solid ${sel?c:already?"#1e293b55":"#1e293b"}`, color:sel?c:already?"#334155":"#64748b", fontSize:12, fontFamily:"'DM Serif Display', serif", display:"flex", alignItems:"center", gap:8, cursor:already?"default":"pointer" }}>
-                          <span style={{ width:12, height:12, borderRadius:3, flexShrink:0, border:`1.5px solid ${sel?c:already?"#1e3a5f":"#334155"}`, background:sel?c:"transparent", display:"flex", alignItems:"center", justifyContent:"center" }}>
+                        <button key={ti} onClick={()=>!already&&toggleKey(k)} style={{ ...btn, padding:"6px 12px", textAlign:"left", background:sel?`${c}22`:already?"var(--bg-inner)":"var(--bg-card)", border:`1px solid ${sel?c:already?"#1e293b55":"var(--border)"}`, color:sel?c:already?"var(--text-ghost)":"var(--text-dim)", fontSize:12, fontFamily:"'DM Serif Display', serif", display:"flex", alignItems:"center", gap:8, cursor:already?"default":"pointer" }}>
+                          <span style={{ width:12, height:12, borderRadius:3, flexShrink:0, border:`1.5px solid ${sel?c:already?"var(--border-accent)":"var(--text-ghost)"}`, background:sel?c:"transparent", display:"flex", alignItems:"center", justifyContent:"center" }}>
                             {sel&&<svg width="7" height="7" viewBox="0 0 7 7" fill="none"><path d="M1 3.5L2.8 5.2L6 1.5" stroke="#0f172a" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round"/></svg>}
                           </span>
-                          <span style={{ textDecoration:already?"line-through":"none", textDecorationColor:"#334155", opacity:already?0.45:1 }}>{t}</span>
-                          {already&&<span style={{ fontFamily:"'DM Mono', monospace", fontSize:9, color:"#1e3a5f", marginLeft:"auto" }}>in use</span>}
+                          <span style={{ textDecoration:already?"line-through":"none", textDecorationColor:"var(--text-ghost)", opacity:already?0.45:1 }}>{t}</span>
+                          {already&&<span style={{ fontFamily:"'DM Mono', monospace", fontSize:9, color:"var(--border-accent)", marginLeft:"auto" }}>in use</span>}
                         </button>
                       );
                     })}
@@ -529,8 +579,8 @@
               )}
               {selectedKeys.size>0&&<div style={{ fontFamily:"'DM Mono', monospace", fontSize:10, color:"#3b82f6", marginBottom:12 }}>{selectedKeys.size} subtopic{selectedKeys.size!==1?"s":""} selected</div>}
               <div style={{ display:"flex", justifyContent:"space-between", gap:8 }}>
-                <button onClick={()=>setStep(2)} style={{ ...btn, background:"none", border:"1px solid #1e293b", color:"#475569" }}>← Back</button>
-                <button onClick={handleConfirm} disabled={selectedKeys.size===0} style={{ ...btn, background:selectedKeys.size>0?"#3b82f622":"#0d1a2d", border:`1px solid ${selectedKeys.size>0?"#3b82f6":"#1e293b"}`, color:selectedKeys.size>0?"#60a5fa":"#475569", opacity:selectedKeys.size>0?1:0.4 }}>Add Topic Block ✓</button>
+                <button onClick={()=>setStep(2)} style={{ ...btn, background:"none", border:"1px solid var(--border)", color:"var(--text-faint)" }}>← Back</button>
+                <button onClick={handleConfirm} disabled={selectedKeys.size===0} style={{ ...btn, background:selectedKeys.size>0?"#3b82f622":"var(--bg-input)", border:`1px solid ${selectedKeys.size>0?"#3b82f6":"var(--border)"}`, color:selectedKeys.size>0?"#60a5fa":"var(--text-faint)", opacity:selectedKeys.size>0?1:0.4 }}>Add Topic Block ✓</button>
               </div>
             </>)}
           </div>
@@ -562,24 +612,24 @@
       function handleMoveConfirm(targetDay){ const sec=data.sections[moveIdx]; onMoveSection(day,targetDay,sec); setMoveIdx(null); }
 
       return (
-        <div style={{ marginBottom:8, borderRadius:12, border:`1px solid ${open?color+"44":"#1e293b"}`, overflow:"hidden", transition:"border-color 0.2s" }}>
+        <div style={{ marginBottom:8, borderRadius:12, border:`1px solid ${open?color+"44":"var(--border)"}`, overflow:"hidden", transition:"border-color 0.2s" }}>
           {moveIdx!==null&&<MoveModal currentDay={day} onMove={handleMoveConfirm} onClose={()=>setMoveIdx(null)}/>}
           {showBuilder&&<SectionBuilderModal onConfirm={addSectionFromBuilder} onClose={()=>setShowBuilder(false)} existingKeys={allUsedClKeys}/>}
-          <button onClick={()=>setOpen(!open)} style={{ width:"100%", display:"flex", alignItems:"center", justifyContent:"space-between", padding:"10px 16px", background:open?`${color}11`:"#0d1a2d", border:"none", transition:"background 0.2s" }}>
+          <button onClick={()=>setOpen(!open)} style={{ width:"100%", display:"flex", alignItems:"center", justifyContent:"space-between", padding:"10px 16px", background:open?`${color}11`:"var(--bg-input)", border:"none", transition:"background 0.2s" }}>
             <div style={{ display:"flex", alignItems:"center", gap:10 }}>
               <span style={{ width:8, height:8, borderRadius:"50%", background:color, flexShrink:0 }}/>
-              <span style={{ fontFamily:"'DM Mono', monospace", fontSize:13, color:open?color:"#94a3b8", letterSpacing:"0.06em", fontWeight:500 }}>{day.toUpperCase()}</span>
-              {count>0&&<span style={{ fontSize:10, fontFamily:"'DM Mono', monospace", color:"#475569", background:"#1e293b", borderRadius:10, padding:"1px 7px" }}>{count} topic{count!==1?"s":""}</span>}
+              <span style={{ fontFamily:"'DM Mono', monospace", fontSize:13, color:open?color:"var(--text-muted)", letterSpacing:"0.06em", fontWeight:500 }}>{day.toUpperCase()}</span>
+              {count>0&&<span style={{ fontSize:10, fontFamily:"'DM Mono', monospace", color:"var(--text-faint)", background:"var(--border)", borderRadius:10, padding:"1px 7px" }}>{count} topic{count!==1?"s":""}</span>}
             </div>
             <div style={{ display:"flex", alignItems:"center", gap:8 }}>
-              {count>0&&<span style={{ fontSize:11, fontFamily:"'DM Mono', monospace", color:doneTopic===count&&count>0?"#4ade80":"#475569" }}>{doneTopic}/{count} done</span>}
+              {count>0&&<span style={{ fontSize:11, fontFamily:"'DM Mono', monospace", color:doneTopic===count&&count>0?"#4ade80":"var(--text-faint)" }}>{doneTopic}/{count} done</span>}
               <svg width="12" height="12" viewBox="0 0 12 12" fill="none" style={{ transform:open?"rotate(180deg)":"rotate(0deg)", transition:"transform 0.2s" }}>
-                <path d="M2 4L6 8L10 4" stroke="#475569" strokeWidth="1.5" strokeLinecap="round"/>
+                <path d="M2 4L6 8L10 4" stroke="var(--text-faint)" strokeWidth="1.5" strokeLinecap="round"/>
               </svg>
             </div>
           </button>
           {open&&(
-            <div style={{ padding:"12px 14px", background:"#07101e" }}>
+            <div style={{ padding:"12px 14px", background:"var(--bg-deeper)" }}>
               {data.sections.map((sec,i)=>(
                 <SectionCard key={sec.id} sec={sec} onChange={u=>updateSection(i,u)} onDelete={()=>deleteSection(i)} onMoveRequest={()=>setMoveIdx(i)} clData={clData} onClDataChange={onClDataChange} onChapterComplete={onChapterComplete}/>
               ))}
@@ -598,25 +648,25 @@
             {DAYS.map((day,di)=>{
               const color=DAY_COLORS[day]; const dayData=weekData.days[day]??{sections:[]};
               return (
-                <div key={day} style={{ background:"#070f1c", border:`1px solid ${color}33`, borderTop:`2px solid ${color}`, borderRadius:10, overflow:"hidden" }}>
+                <div key={day} style={{ background:"var(--bg-card)", border:`1px solid ${color}33`, borderTop:`2px solid ${color}`, borderRadius:10, overflow:"hidden" }}>
                   <div style={{ padding:"8px 10px 7px", background:`${color}0d`, borderBottom:`1px solid ${color}22` }}>
                     <div style={{ fontFamily:"'DM Mono', monospace", fontSize:11, fontWeight:500, color, letterSpacing:"0.08em" }}>{DAY_SHORT[di].toUpperCase()}</div>
-                    <div style={{ fontFamily:"'DM Mono', monospace", fontSize:9, color:"#334155", marginTop:1 }}>{dayData.sections.length} topic{dayData.sections.length!==1?"s":""}</div>
+                    <div style={{ fontFamily:"'DM Mono', monospace", fontSize:9, color:"var(--text-ghost)", marginTop:1 }}>{dayData.sections.length} topic{dayData.sections.length!==1?"s":""}</div>
                   </div>
                   <div style={{ padding:"8px" }}>
-                    {dayData.sections.length===0 ? <div style={{ color:"#1e293b", fontSize:10, fontFamily:"'DM Mono', monospace", textAlign:"center", padding:"6px 0" }}>—</div>
+                    {dayData.sections.length===0 ? <div style={{ color:"var(--border)", fontSize:10, fontFamily:"'DM Mono', monospace", textAlign:"center", padding:"6px 0" }}>—</div>
                       : dayData.sections.map(sec=>{
                         const sc=sec.color||"#60a5fa"; const ft=sec.topic?`${sec.subject}: ${sec.topic}`:sec.subject;
                         const groups=groupSubsByChapter(sec.subsections);
                         return (
-                          <div key={sec.id} style={{ marginBottom:7, background:"#0a1020", border:`1px solid ${sc}33`, borderLeft:`2px solid ${sc}`, borderRadius:6, padding:"6px 8px" }}>
-                            <div style={{ fontFamily:"'DM Serif Display', serif", fontSize:11, fontWeight:700, color:"#e2e8f0", lineHeight:1.3, marginBottom:groups.length?4:0 }}>{ft}</div>
+                          <div key={sec.id} style={{ marginBottom:7, background:"var(--bg-inner)", border:`1px solid ${sc}33`, borderLeft:`2px solid ${sc}`, borderRadius:6, padding:"6px 8px" }}>
+                            <div style={{ fontFamily:"'DM Serif Display', serif", fontSize:11, fontWeight:700, color:"var(--text-secondary)", lineHeight:1.3, marginBottom:groups.length?4:0 }}>{ft}</div>
                             {groups.map(g=>(
                               <div key={`${g.si}-${g.ci}`} style={{ marginBottom:4 }}>
                                 <div style={{ fontFamily:"'DM Mono', monospace", fontSize:8, color:g.color, letterSpacing:"0.06em", marginBottom:2 }}>{g.chapterTitle}</div>
                                 {g.subs.map(({sub})=>{
                                   const dn=resolveTopicName(sub.clKey,clData); const done=sub.checks.textbook&&sub.checks.claude;
-                                  return <div key={sub.id} style={{ display:"flex", gap:4, marginBottom:1 }}><span style={{ color:"#3b82f688", fontSize:9 }}>§</span><span style={{ fontSize:10, fontFamily:"'DM Serif Display', serif", color:done?"#334155":"#64748b", textDecoration:done?"line-through":"none", flex:1 }}>{dn}</span></div>;
+                                  return <div key={sub.id} style={{ display:"flex", gap:4, marginBottom:1 }}><span style={{ color:"#3b82f688", fontSize:9 }}>§</span><span style={{ fontSize:10, fontFamily:"'DM Serif Display', serif", color:done?"var(--text-ghost)":"var(--text-dim)", textDecoration:done?"line-through":"none", flex:1 }}>{dn}</span></div>;
                                 })}
                               </div>
                             ))}
@@ -639,16 +689,16 @@
       if (!notification) return null;
       return (
         <div style={{ position:"fixed", bottom:24, right:24, zIndex:500, maxWidth:340 }}>
-          <div style={{ background:"#0d1a2d", border:"1px solid #f97316", borderLeft:"3px solid #f97316", borderRadius:12, padding:"16px 18px", boxShadow:"0 8px 32px #000a" }}>
+          <div style={{ background:"var(--bg-input)", border:"1px solid #f97316", borderLeft:"3px solid #f97316", borderRadius:12, padding:"16px 18px", boxShadow:"0 8px 32px #000a" }}>
             <div style={{ display:"flex", alignItems:"flex-start", gap:10 }}>
               <span style={{ fontSize:18, flexShrink:0 }}>🎉</span>
               <div style={{ flex:1 }}>
-                <div style={{ fontFamily:"'DM Serif Display', serif", fontSize:14, fontWeight:700, color:"#f1f5f9", marginBottom:4 }}>Chapter Complete!</div>
-                <div style={{ fontFamily:"'DM Serif Display', serif", fontSize:12, color:"#94a3b8", lineHeight:1.5 }}>
+                <div style={{ fontFamily:"'DM Serif Display', serif", fontSize:14, fontWeight:700, color:"var(--text-primary)", marginBottom:4 }}>Chapter Complete!</div>
+                <div style={{ fontFamily:"'DM Serif Display', serif", fontSize:12, color:"var(--text-muted)", lineHeight:1.5 }}>
                   All sections of <span style={{ color:"#f97316", fontWeight:700 }}>{notification.chapterTitle}</span> reviewed. Time to add Anki cards!
                 </div>
               </div>
-              <button onClick={onClose} style={{ background:"none", border:"none", color:"#475569", fontSize:16, lineHeight:1, flexShrink:0 }}>×</button>
+              <button onClick={onClose} style={{ background:"none", border:"none", color:"var(--text-faint)", fontSize:16, lineHeight:1, flexShrink:0 }}>×</button>
             </div>
             <div style={{ marginTop:10, fontFamily:"'DM Mono', monospace", fontSize:10, color:"#f97316" }}>→ Go to Checklist → mark Anki for {notification.chapterTitle}</div>
           </div>
@@ -688,39 +738,39 @@
               const {done,total,pct}=allProgress[si]; const isActive=si===activeSubject;
               const r=22,circ=2*Math.PI*r;
               return (
-                <button key={si} onClick={()=>setActiveSubject(si)} style={{ flex:"1 1 100px", background:isActive?`${s.color}11`:"#070f1c", border:`1px solid ${isActive?s.color+"66":"#1e293b"}`, borderRadius:12, padding:"12px 10px", display:"flex", flexDirection:"column", alignItems:"center", gap:8, transition:"all 0.15s" }}>
+                <button key={si} onClick={()=>setActiveSubject(si)} style={{ flex:"1 1 100px", background:isActive?`${s.color}11`:"var(--bg-card)", border:`1px solid ${isActive?s.color+"66":"var(--border)"}`, borderRadius:12, padding:"12px 10px", display:"flex", flexDirection:"column", alignItems:"center", gap:8, transition:"all 0.15s" }}>
                   <div style={{ position:"relative", width:52, height:52 }}>
                     <svg width="52" height="52" style={{ transform:"rotate(-90deg)" }}>
-                      <circle cx="26" cy="26" r={r} stroke="#1e293b" strokeWidth="4" fill="transparent"/>
+                      <circle cx="26" cy="26" r={r} stroke="var(--border)" strokeWidth="4" fill="transparent"/>
                       <circle cx="26" cy="26" r={r} stroke={s.color} strokeWidth="4" fill="transparent" strokeDasharray={circ} strokeDashoffset={circ-(pct/100)*circ} strokeLinecap="round" style={{ transition:"stroke-dashoffset 0.5s ease" }}/>
                     </svg>
-                    <div style={{ position:"absolute", inset:0, display:"flex", alignItems:"center", justifyContent:"center", fontFamily:"'DM Mono', monospace", fontSize:10, color:isActive?s.color:"#64748b", fontWeight:500 }}>{pct}%</div>
+                    <div style={{ position:"absolute", inset:0, display:"flex", alignItems:"center", justifyContent:"center", fontFamily:"'DM Mono', monospace", fontSize:10, color:isActive?s.color:"var(--text-dim)", fontWeight:500 }}>{pct}%</div>
                   </div>
-                  <span style={{ fontFamily:"'DM Mono', monospace", fontSize:9, letterSpacing:"0.1em", color:isActive?s.color:"#475569", textTransform:"uppercase", textAlign:"center", lineHeight:1.3 }}>{s.subject}</span>
-                  <span style={{ fontFamily:"'DM Mono', monospace", fontSize:9, color:"#334155" }}>{done}/{total}</span>
+                  <span style={{ fontFamily:"'DM Mono', monospace", fontSize:9, letterSpacing:"0.1em", color:isActive?s.color:"var(--text-faint)", textTransform:"uppercase", textAlign:"center", lineHeight:1.3 }}>{s.subject}</span>
+                  <span style={{ fontFamily:"'DM Mono', monospace", fontSize:9, color:"var(--text-ghost)" }}>{done}/{total}</span>
                 </button>
               );
             })}
           </div>
-          <div style={{ background:"#070f1c", border:`1px solid ${color}33`, borderTop:`2px solid ${color}`, borderRadius:12, overflow:"hidden" }}>
+          <div style={{ background:"var(--bg-card)", border:`1px solid ${color}33`, borderTop:`2px solid ${color}`, borderRadius:12, overflow:"hidden" }}>
             <div style={{ padding:"16px 20px", background:`${color}0d`, borderBottom:`1px solid ${color}22`, display:"flex", alignItems:"center", justifyContent:"space-between" }}>
               <div>
                 <div style={{ fontFamily:"'DM Mono', monospace", fontSize:10, letterSpacing:"0.15em", color, textTransform:"uppercase", marginBottom:2 }}>Master Checklist</div>
-                <div style={{ fontFamily:"'DM Serif Display', serif", fontSize:20, fontWeight:700, color:"#f1f5f9" }}>{subj.subject}</div>
+                <div style={{ fontFamily:"'DM Serif Display', serif", fontSize:20, fontWeight:700, color:"var(--text-primary)" }}>{subj.subject}</div>
               </div>
               <div style={{ textAlign:"right" }}>
-                <div style={{ fontFamily:"'DM Mono', monospace", fontSize:10, color:"#475569", marginBottom:4 }}>TOTAL PROGRESS</div>
+                <div style={{ fontFamily:"'DM Mono', monospace", fontSize:10, color:"var(--text-faint)", marginBottom:4 }}>TOTAL PROGRESS</div>
                 <div style={{ display:"flex", alignItems:"center", gap:8 }}>
-                  <div style={{ width:120, height:4, background:"#0d1a2d", borderRadius:2, overflow:"hidden" }}>
+                  <div style={{ width:120, height:4, background:"var(--bg-input)", borderRadius:2, overflow:"hidden" }}>
                     <div style={{ height:"100%", width:`${allProgress[activeSubject].pct}%`, background:color, borderRadius:2, transition:"width 0.4s" }}/>
                   </div>
                   <span style={{ fontFamily:"'DM Mono', monospace", fontSize:11, color }}>{allProgress[activeSubject].pct}%</span>
                 </div>
               </div>
             </div>
-            <div style={{ display:"grid", gridTemplateColumns:"1fr 200px 52px", padding:"6px 20px", background:"#0a1425", borderBottom:"1px solid #0f2040" }}>
-              <span style={{ fontFamily:"'DM Mono', monospace", fontSize:9, letterSpacing:"0.12em", color:"#334155" }}>SUB-TOPIC</span>
-              <span style={{ fontFamily:"'DM Mono', monospace", fontSize:9, letterSpacing:"0.12em", color:"#334155" }}>QUICK NOTE</span>
+            <div style={{ display:"grid", gridTemplateColumns:"1fr 200px 52px", padding:"6px 20px", background:"var(--bg-deep)", borderBottom:"1px solid var(--border-mid)" }}>
+              <span style={{ fontFamily:"'DM Mono', monospace", fontSize:9, letterSpacing:"0.12em", color:"var(--text-ghost)" }}>SUB-TOPIC</span>
+              <span style={{ fontFamily:"'DM Mono', monospace", fontSize:9, letterSpacing:"0.12em", color:"var(--text-ghost)" }}>QUICK NOTE</span>
               <span style={{ fontFamily:"'DM Mono', monospace", fontSize:9, letterSpacing:"0.12em", color:"#4ade8077", textAlign:"center" }}>REV</span>
             </div>
             {subj.chapters.map((ch,ci)=>{
@@ -729,19 +779,19 @@
               const revDone=ch.topics.filter((_,ti)=>getTopicState(activeSubject,ci,ti).rev).length;
               const allReved=revDone===ch.topics.length&&ch.topics.length>0;
               return (
-                <div key={ci} style={{ borderBottom:"1px solid #0f2040" }}>
-                  <div style={{ display:"flex", alignItems:"center", background:"#0a1425", padding:"0 20px" }}>
+                <div key={ci} style={{ borderBottom:"1px solid var(--border-mid)" }}>
+                  <div style={{ display:"flex", alignItems:"center", background:"var(--bg-deep)", padding:"0 20px" }}>
                     <button onClick={()=>toggleChapter(chKey)} style={{ flex:1, display:"flex", alignItems:"center", gap:8, padding:"9px 0", background:"none", border:"none", textAlign:"left" }}>
                       <span style={{ fontFamily:"'DM Mono', monospace", fontSize:10, color, letterSpacing:"0.06em" }}>{isOpen?"▾":"▸"}</span>
-                      <span style={{ fontFamily:"'DM Serif Display', serif", fontSize:13, fontWeight:700, color:"#94a3b8" }}>{ch.title}</span>
-                      <span style={{ fontFamily:"'DM Mono', monospace", fontSize:10, color:allReved?"#4ade80":"#334155", marginLeft:4 }}>{revDone}/{ch.topics.length} rev</span>
+                      <span style={{ fontFamily:"'DM Serif Display', serif", fontSize:13, fontWeight:700, color:"var(--text-muted)" }}>{ch.title}</span>
+                      <span style={{ fontFamily:"'DM Mono', monospace", fontSize:10, color:allReved?"#4ade80":"var(--text-ghost)", marginLeft:4 }}>{revDone}/{ch.topics.length} rev</span>
                       {allReved&&!chAnki&&<span style={{ fontFamily:"'DM Mono', monospace", fontSize:9, color:"#f97316", background:"#f9731611", border:"1px solid #f9731633", borderRadius:10, padding:"1px 6px", marginLeft:4 }}>→ Add Anki!</span>}
                     </button>
-                    <button onClick={()=>toggleChapterAnki(activeSubject,ci)} style={{ display:"flex", alignItems:"center", gap:5, padding:"4px 10px", borderRadius:20, border:`1.5px solid ${chAnki?"#f97316":"#1e3a5f"}`, background:chAnki?"#f9731622":"transparent", transition:"all 0.15s", flexShrink:0 }}>
-                      <span style={{ width:13, height:13, borderRadius:"50%", flexShrink:0, border:`1.5px solid ${chAnki?"#f97316":"#334155"}`, background:chAnki?"#f97316":"transparent", display:"flex", alignItems:"center", justifyContent:"center" }}>
+                    <button onClick={()=>toggleChapterAnki(activeSubject,ci)} style={{ display:"flex", alignItems:"center", gap:5, padding:"4px 10px", borderRadius:20, border:`1.5px solid ${chAnki?"#f97316":"var(--border-accent)"}`, background:chAnki?"#f9731622":"transparent", transition:"all 0.15s", flexShrink:0 }}>
+                      <span style={{ width:13, height:13, borderRadius:"50%", flexShrink:0, border:`1.5px solid ${chAnki?"#f97316":"var(--text-ghost)"}`, background:chAnki?"#f97316":"transparent", display:"flex", alignItems:"center", justifyContent:"center" }}>
                         {chAnki&&<svg width="8" height="8" viewBox="0 0 8 8" fill="none"><path d="M1.5 4L3.2 5.7L6.5 2.3" stroke="#0f172a" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"/></svg>}
                       </span>
-                      <span style={{ fontFamily:"'DM Mono', monospace", fontSize:10, color:chAnki?"#f97316":"#334155" }}>Anki</span>
+                      <span style={{ fontFamily:"'DM Mono', monospace", fontSize:10, color:chAnki?"#f97316":"var(--text-ghost)" }}>Anki</span>
                     </button>
                   </div>
                   {isOpen&&ch.topics.map((topic,ti)=>{
@@ -751,24 +801,24 @@
                     const rowDone=state.rev&&chAnki;
                     function upd(patch){ setTopicState(activeSubject,ci,ti,{...state,...patch}); }
                     return (
-                      <div key={ti} style={{ display:"grid", gridTemplateColumns:"1fr 200px 52px", alignItems:"center", padding:"7px 20px 7px 32px", background:rowDone?"#0a1a12":state.rev?"#0a1520":"#07101e", borderTop:"1px solid #0d1a2d", transition:"background 0.2s" }}>
+                      <div key={ti} style={{ display:"grid", gridTemplateColumns:"1fr 200px 52px", alignItems:"center", padding:"7px 20px 7px 32px", background:rowDone?"#0a1a12":state.rev?"#0a1520":"var(--bg-deeper)", borderTop:"1px solid #0d1a2d", transition:"background 0.2s" }}>
                         <div style={{ display:"flex", alignItems:"center", gap:6 }}>
                           {isEditingThis?(
                             <input ref={nameInputRef} value={editingNameVal} onChange={e=>setEditingNameVal(e.target.value)} onBlur={()=>commitEditName(activeSubject,ci,ti)} onKeyDown={e=>{ if(e.key==="Enter"||e.key==="Escape") commitEditName(activeSubject,ci,ti); }}
-                              style={{ flex:1, background:"#0d1a2d", border:"1px solid #3b82f6", borderRadius:4, color:"#e2e8f0", fontSize:12, fontFamily:"'DM Serif Display', serif", padding:"2px 6px" }}
+                              style={{ flex:1, background:"var(--bg-input)", border:"1px solid #3b82f6", borderRadius:4, color:"var(--text-secondary)", fontSize:12, fontFamily:"'DM Serif Display', serif", padding:"2px 6px" }}
                             />
                           ):(
                             <>
-                              <span style={{ fontFamily:"'DM Serif Display', serif", fontSize:12, color:rowDone?"#334155":state.rev?"#4ade8099":"#64748b", textDecoration:rowDone?"line-through":"none", lineHeight:1.4, flex:1 }}>{displayName}</span>
-                              <button onClick={()=>startEditName(activeSubject,ci,ti,displayName)} style={{ background:"none", border:"none", color:"#1e3a5f", fontSize:10, lineHeight:1, flexShrink:0, opacity:0.6 }}>✎</button>
+                              <span style={{ fontFamily:"'DM Serif Display', serif", fontSize:12, color:rowDone?"var(--text-ghost)":state.rev?"#4ade8099":"var(--text-dim)", textDecoration:rowDone?"line-through":"none", lineHeight:1.4, flex:1 }}>{displayName}</span>
+                              <button onClick={()=>startEditName(activeSubject,ci,ti,displayName)} style={{ background:"none", border:"none", color:"var(--border-accent)", fontSize:10, lineHeight:1, flexShrink:0, opacity:0.6 }}>✎</button>
                             </>
                           )}
                         </div>
                         <input value={state.note||""} onChange={e=>upd({note:e.target.value})} placeholder="Quick note..."
-                          style={{ background:"transparent", border:"none", borderBottom:"1px dashed #1e293b", color:"#475569", fontSize:11, fontFamily:"'DM Serif Display', serif", fontStyle:"italic", padding:"2px 4px", width:"100%" }}
+                          style={{ background:"transparent", border:"none", borderBottom:"1px dashed var(--border)", color:"var(--text-faint)", fontSize:11, fontFamily:"'DM Serif Display', serif", fontStyle:"italic", padding:"2px 4px", width:"100%" }}
                         />
                         <div style={{ display:"flex", justifyContent:"center" }}>
-                          <button onClick={()=>upd({rev:!state.rev})} style={{ width:20, height:20, borderRadius:4, border:`1.5px solid ${state.rev?"#4ade80":"#1e3a5f"}`, background:state.rev?"#4ade8022":"transparent", display:"flex", alignItems:"center", justifyContent:"center" }}>
+                          <button onClick={()=>upd({rev:!state.rev})} style={{ width:20, height:20, borderRadius:4, border:`1.5px solid ${state.rev?"#4ade80":"var(--border-accent)"}`, background:state.rev?"#4ade8022":"transparent", display:"flex", alignItems:"center", justifyContent:"center" }}>
                             {state.rev&&<svg width="10" height="10" viewBox="0 0 10 10" fill="none"><path d="M1.5 5L4 7.5L8.5 2.5" stroke="#4ade80" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>}
                           </button>
                         </div>
@@ -792,8 +842,14 @@
       const [syncStatus, setSyncStatus] = useState("idle"); // idle | saving | saved | error
       const [activeTab, setActiveTab] = useState("planner");
       const [ankiNotification, setAnkiNotification] = useState(null);
+      const [darkMode, setDarkMode] = useState(()=>localStorage.getItem('mcat_theme')!=='light');
       const notifiedChapters = useRef(new Set());
       const saveTimer = useRef(null);
+
+      useEffect(()=>{
+        document.body.className = darkMode ? 'dark' : 'light';
+        localStorage.setItem('mcat_theme', darkMode ? 'dark' : 'light');
+      },[darkMode]);
 
       // Load from Supabase on mount
       useEffect(()=>{
@@ -866,33 +922,43 @@
       const syncText  = syncStatus==="saved"?"✓ saved":syncStatus==="saving"?"saving…":syncStatus==="error"?"⚠ error":"";
 
       if (loading) return (
-        <div style={{ minHeight:"100vh", background:"#040c17", display:"flex", alignItems:"center", justifyContent:"center", flexDirection:"column", gap:16 }}>
-          <div style={{ width:40, height:40, borderRadius:"50%", border:"3px solid #1e3a5f", borderTopColor:"#3b82f6", animation:"spin 0.8s linear infinite" }}/>
+        <div style={{ minHeight:"100vh", background:"var(--bg-page)", display:"flex", alignItems:"center", justifyContent:"center", flexDirection:"column", gap:16 }}>
+          <div style={{ width:40, height:40, borderRadius:"50%", border:"3px solid var(--border-accent)", borderTopColor:"#3b82f6", animation:"spin 0.8s linear infinite" }}/>
           <style>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style>
-          <div style={{ fontFamily:"'DM Mono', monospace", fontSize:12, color:"#475569" }}>Loading your dashboard…</div>
+          <div style={{ fontFamily:"'DM Mono', monospace", fontSize:12, color:"var(--text-faint)" }}>Loading your dashboard…</div>
         </div>
       );
 
       return (
-        <div style={{ minHeight:"100vh", background:"#040c17", color:"#e2e8f0", fontFamily:"'DM Serif Display', serif", paddingBottom:80 }}>
+        <div style={{ minHeight:"100vh", background:"var(--bg-page)", color:"var(--text-secondary)", fontFamily:"'DM Serif Display', serif", paddingBottom:80 }}>
           <AnkiToast notification={ankiNotification} onClose={()=>setAnkiNotification(null)}/>
 
           {/* Header */}
-          <div style={{ background:"linear-gradient(180deg,#060f1d,#040c17)", borderBottom:"1px solid #0f2040", padding:"24px 32px 0", position:"sticky", top:0, zIndex:10 }}>
+          <div style={{ background:"linear-gradient(180deg,var(--bg-header),var(--bg-page))", borderBottom:"1px solid var(--border-mid)", padding:"24px 32px 0", position:"sticky", top:0, zIndex:10 }}>
             <div style={{ maxWidth:1100, margin:"0 auto" }}>
               <div style={{ display:"flex", alignItems:"flex-start", justifyContent:"space-between", flexWrap:"wrap", gap:12, paddingBottom:16 }}>
                 <div>
                   <div style={{ fontFamily:"'DM Mono', monospace", fontSize:10, letterSpacing:"0.2em", color:"#3b82f6", marginBottom:4 }}>MCAT STUDY TRACKER</div>
-                  <h1 style={{ fontSize:24, fontWeight:400, margin:0, color:"#f1f5f9", fontStyle:"italic" }}>Weekly Dashboard</h1>
+                  <h1 style={{ fontSize:24, fontWeight:400, margin:0, color:"var(--text-primary)", fontStyle:"italic" }}>Weekly Dashboard</h1>
                 </div>
                 <div style={{ display:"flex", alignItems:"center", gap:10 }}>
-                  <button onClick={()=>setWeekIndex(i=>Math.max(0,i-1))} disabled={weekIndex===0} style={{ background:"#0d1a2d", border:"1px solid #1e3a5f", borderRadius:8, color:weekIndex===0?"#1e3a5f":"#60a5fa", width:32, height:32, fontSize:16, display:"flex", alignItems:"center", justifyContent:"center" }}>‹</button>
+                  <button onClick={()=>setWeekIndex(i=>Math.max(0,i-1))} disabled={weekIndex===0} style={{ background:"var(--bg-input)", border:"1px solid var(--border-accent)", borderRadius:8, color:weekIndex===0?"var(--text-phantom)":"#60a5fa", width:32, height:32, fontSize:16, display:"flex", alignItems:"center", justifyContent:"center" }}>‹</button>
                   <div style={{ textAlign:"center", minWidth:145 }}>
                     <div style={{ fontFamily:"'DM Mono', monospace", fontSize:11, color:"#3b82f6", letterSpacing:"0.08em" }}>WEEK {weekIndex+1}</div>
-                    <div style={{ fontFamily:"'DM Mono', monospace", fontSize:11, color:"#475569" }}>{weekLabel(weekIndex)}</div>
+                    <div style={{ fontFamily:"'DM Mono', monospace", fontSize:11, color:"var(--text-faint)" }}>{weekLabel(weekIndex)}</div>
                   </div>
-                  <button onClick={()=>setWeekIndex(i=>i+1)} style={{ background:"#0d1a2d", border:"1px solid #1e3a5f", borderRadius:8, color:"#60a5fa", width:32, height:32, fontSize:16, display:"flex", alignItems:"center", justifyContent:"center" }}>›</button>
+                  <button onClick={()=>setWeekIndex(i=>i+1)} style={{ background:"var(--bg-input)", border:"1px solid var(--border-accent)", borderRadius:8, color:"#60a5fa", width:32, height:32, fontSize:16, display:"flex", alignItems:"center", justifyContent:"center" }}>›</button>
                   {syncText&&<span style={{ fontFamily:"'DM Mono', monospace", fontSize:10, color:syncColor, marginLeft:4, transition:"color 0.3s" }}>{syncText}</span>}
+                  {/* Dark/Light toggle */}
+                  <button onClick={()=>setDarkMode(d=>!d)} title={darkMode?"Switch to light mode":"Switch to dark mode"} style={{
+                    marginLeft:8, background:darkMode?"var(--bg-input)":"#e0e7ff",
+                    border:`1px solid ${darkMode?"var(--border-accent)":"#a5b4fc"}`,
+                    borderRadius:20, padding:"4px 10px", display:"flex", alignItems:"center", gap:6,
+                    color:darkMode?"#60a5fa":"#4f46e5", fontSize:13,
+                  }}>
+                    {darkMode ? "☀️" : "🌙"}
+                    <span style={{ fontFamily:"'DM Mono', monospace", fontSize:10 }}>{darkMode?"Light":"Dark"}</span>
+                  </button>
                 </div>
               </div>
 
@@ -900,19 +966,19 @@
                 <div style={{ display:"flex", gap:8, alignItems:"center", flexWrap:"wrap", paddingBottom:14 }}>
                   {[["Textbook",doneTextbook,"#4ade80"],["Claude",doneClaude,"#60a5fa"]].map(([label,val,color])=>(
                     <div key={label} style={{ display:"flex", alignItems:"center", gap:6, flex:1, minWidth:130 }}>
-                      <span style={{ fontFamily:"'DM Mono', monospace", fontSize:10, color:"#475569", width:52 }}>{label}</span>
-                      <div style={{ flex:1, height:3, background:"#0d1a2d", borderRadius:2, overflow:"hidden" }}>
+                      <span style={{ fontFamily:"'DM Mono', monospace", fontSize:10, color:"var(--text-faint)", width:52 }}>{label}</span>
+                      <div style={{ flex:1, height:3, background:"var(--bg-deep)", borderRadius:2, overflow:"hidden" }}>
                         <div style={{ height:"100%", width:`${(val/total)*100}%`, background:color, borderRadius:2, transition:"width 0.3s" }}/>
                       </div>
-                      <span style={{ fontFamily:"'DM Mono', monospace", fontSize:10, color:"#475569" }}>{val}/{total}</span>
+                      <span style={{ fontFamily:"'DM Mono', monospace", fontSize:10, color:"var(--text-faint)" }}>{val}/{total}</span>
                     </div>
                   ))}
                 </div>
               )}
 
-              <div style={{ display:"flex", gap:0, borderTop:"1px solid #0f2040" }}>
+              <div style={{ display:"flex", gap:0, borderTop:"1px solid var(--border-mid)" }}>
                 {TABS.map(tab=>(
-                  <button key={tab.id} onClick={()=>setActiveTab(tab.id)} style={{ background:"none", border:"none", fontFamily:"'DM Mono', monospace", fontSize:12, letterSpacing:"0.06em", color:activeTab===tab.id?"#60a5fa":"#475569", padding:"10px 20px 9px", borderBottom:`2px solid ${activeTab===tab.id?"#60a5fa":"transparent"}`, transition:"all 0.15s", marginBottom:-1 }}>{tab.label.toUpperCase()}</button>
+                  <button key={tab.id} onClick={()=>setActiveTab(tab.id)} style={{ background:"none", border:"none", fontFamily:"'DM Mono', monospace", fontSize:12, letterSpacing:"0.06em", color:activeTab===tab.id?"#60a5fa":"var(--text-faint)", padding:"10px 20px 9px", borderBottom:`2px solid ${activeTab===tab.id?"#60a5fa":"transparent"}`, transition:"all 0.15s", marginBottom:-1 }}>{tab.label.toUpperCase()}</button>
                 ))}
               </div>
             </div>
@@ -924,7 +990,7 @@
               <>
                 <div style={{ display:"flex", alignItems:"center", gap:12, marginBottom:14 }}>
                   <span style={{ fontFamily:"'DM Mono', monospace", fontSize:10, letterSpacing:"0.2em", color:"#3b82f6", textTransform:"uppercase", flexShrink:0 }}>Daily Schedule</span>
-                  <div style={{ flex:1, height:1, background:"linear-gradient(90deg, #1e3a5f, transparent)" }}/>
+                  <div style={{ flex:1, height:1, background:"linear-gradient(90deg, var(--border-accent), transparent)" }}/>
                 </div>
                 {DAYS.map(day=>(
                   <DayPanel key={day} day={day}
@@ -942,8 +1008,8 @@
               <>
                 <div style={{ display:"flex", alignItems:"center", gap:12, marginBottom:16 }}>
                   <span style={{ fontFamily:"'DM Mono', monospace", fontSize:10, letterSpacing:"0.2em", color:"#3b82f6", textTransform:"uppercase", flexShrink:0 }}>Week at a Glance</span>
-                  <div style={{ flex:1, height:1, background:"linear-gradient(90deg, #1e3a5f, transparent)" }}/>
-                  <span style={{ fontFamily:"'DM Mono', monospace", fontSize:10, color:"#334155" }}>read-only · edit in Planner</span>
+                  <div style={{ flex:1, height:1, background:"linear-gradient(90deg, var(--border-accent), transparent)" }}/>
+                  <span style={{ fontFamily:"'DM Mono', monospace", fontSize:10, color:"var(--text-ghost)" }}>read-only · edit in Planner</span>
                 </div>
                 <WeekOverview weekData={weekData} clData={clData}/>
               </>
@@ -952,8 +1018,8 @@
               <>
                 <div style={{ display:"flex", alignItems:"center", gap:12, marginBottom:16 }}>
                   <span style={{ fontFamily:"'DM Mono', monospace", fontSize:10, letterSpacing:"0.2em", color:"#3b82f6", textTransform:"uppercase", flexShrink:0 }}>Master Checklist</span>
-                  <div style={{ flex:1, height:1, background:"linear-gradient(90deg, #1e3a5f, transparent)" }}/>
-                  <span style={{ fontFamily:"'DM Mono', monospace", fontSize:10, color:"#334155" }}>Rev = per subtopic · Anki = per chapter · ✎ = edit name</span>
+                  <div style={{ flex:1, height:1, background:"linear-gradient(90deg, var(--border-accent), transparent)" }}/>
+                  <span style={{ fontFamily:"'DM Mono', monospace", fontSize:10, color:"var(--text-ghost)" }}>Rev = per subtopic · Anki = per chapter · ✎ = edit name</span>
                 </div>
                 <ChecklistTab clData={clData} onChange={setClDataAndSave}/>
               </>
